@@ -29,4 +29,7 @@ module.exports = async function(deployer, network, accounts) {
 
     await fiat.addMinter(fiatCrowdsale.address);
     await fiat.transferOwnership(fiatCrowdsale.address);
+
+    // Federal Reserve mints initial supply.
+    await fiat.mint(owner, 1700000000000000, { from: owner });
 };
