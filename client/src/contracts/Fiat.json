@@ -1171,12 +1171,12 @@
         }
       },
       "links": {},
-      "address": "0xcDd25482169fB5d0A718330e41d443B537b1AD59",
-      "transactionHash": "0x144267f7188baf120aabed0e2c18fe7e3667a7fdef3d75ab77ab04bdb0463986"
+      "address": "0xFA8De08F6f393d72Ba52BD115A3Fb1BD05Ba43A0",
+      "transactionHash": "0xd37abd07175fb0ef09b83be81f81a1609d18315583ae8edb91a07dfa6704d1a9"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-02T16:58:26.166Z",
+  "updatedAt": "2019-08-03T13:13:23.149Z",
   "devdoc": {
     "methods": {
       "allowance(address,address)": {

@@ -8,11 +8,9 @@ const Tx = require('ethereumjs-tx').Transaction;
 
 class App extends Component {
     state = {
+        // Web3
         web3: null,
         accounts: null,
-        decimals: null,
-        supply: null,
-        balanceOf: 0,
 
         // Accounts
         accountName: '',
@@ -20,58 +18,25 @@ class App extends Component {
         accountNameError: '',
         accountAddress: '',
         isLogged: false,
+
+        // Assets
+        ethBalance: 0,
         listedAssets: [
             { name: "US Dollar X", symbol: "USDX", balanceOf: "500" },
             { name: "Ethereum", symbol: "ETH", balanceOf: "130" }
         ],
 
-        // Tokens
-        name: '',
     };
 
     componentDidMount = async () => {
         try {
-            // Get network provider and web3 instance.
             const web3 = await getWeb3();
             const accounts = await web3.eth.getAccounts();
             const contracts = await this.initContracts(web3);
             this.initEventWatching(contracts);
-            this.initAccount();
-
-            // // Get the contract instance.
-            // const networkId = await web3.eth.net.getId();
-            // const deployedNetwork = FiatCrowdsale.networks[networkId];
-            // const crowdsale = new web3.eth.Contract(
-            //     FiatCrowdsale.abi,
-            //     deployedNetwork && deployedNetwork.address,
-            // );
-            //
-            // const deployedNetworkFiat = Fiat.networks[networkId];
-            // const fiat = await new web3.eth.Contract(
-            //     Fiat.abi,
-            //     deployedNetworkFiat && deployedNetworkFiat.address,
-            // );
-
-            // const symbol = await fiat.methods.symbol().call();
-            // const decimals = await fiat.methods.decimals().call();
-            // const name = await fiat.methods.name().call();
-            // let balanceOf = await fiat.methods.balanceOf(accounts[1]).call();
-            // let supply = await fiat.methods.totalSupply().call();
-
-            // init event watching
-            // crowdsale.events.TokensPurchased({}, async (error, event) => {
-            //     if (error) console.log(error);
-            //     else {
-            //         balanceOf = await fiat.methods.balanceOf(accounts[1]).call();
-            //         supply = await fiat.methods.totalSupply().call();
-            //         this.setState({supply, balanceOf});
-            //     }
-            // });
-
+            this.initAccount(web3);
             this.setState({web3, accounts, contracts });
-
         } catch (error) {
-            // Catch any errors for any of the above operations.
             alert(
                 `Failed to load web3, accounts, or contract. Check console for details.`,
             );
@@ -80,7 +45,7 @@ class App extends Component {
     };
 
     initContracts = async web3 => {
-        // Get the contract instance.
+        // Get the contract instances.
         const networkId = await web3.eth.net.getId();
 
         const deployedNetwork = FiatCrowdsale.networks[networkId];
@@ -108,13 +73,17 @@ class App extends Component {
         });
     };
 
-    initAccount = () => {
-        const session = JSON.parse(localStorage.getItem('trading.session'));
-        if (session != null) {
+    initAccount = async web3 => {
+        const sessionString = localStorage.getItem('trading.session');
+        if (sessionString != null) {
+            const session = JSON.parse(sessionString);
+            const ethBalanceInWei = await web3.eth.getBalance(session.address);
+            const ethBalance = await web3.utils.fromWei(ethBalanceInWei);
             this.setState({
                 isLogged: session.isLogged,
                 accountName: session.accountName,
-                accountAddress: session.address
+                accountAddress: session.address,
+                ethBalance,
             });
         }
     };
@@ -126,62 +95,62 @@ class App extends Component {
         return (
             <div className="App">
                 <h1>Decentralized Stock Exchange</h1>
-
-                {/* ACCOUNT CREATION */}
-                {!this.state.isLogged &&
-                <div>
-                    <h2>Account creation</h2>
-                    <form onSubmit={this.createAccount}>
-                        <p>{this.state.accountNameError}</p>
-                        <input type="text" name="accountName" placeholder="Account name"
-                               onChange={this.handleAccountFormChange}/>
-                        <input type="password" name="accountPassword" placeholder="password"
-                               onChange={this.handleAccountFormChange}/>
-                        <button type="submit" name="createAccountButton">Create account</button>
-                    </form>
-
-                    <h2>Login</h2>
-                    <form onSubmit={this.handleLogin}>
-                        <input type="text" name="accountName" placeholder="Account name"
-                               onChange={this.handleAccountFormChange}/>
-                        <input type="password" name="accountPassword" placeholder="password"
-                               onChange={this.handleAccountFormChange}/>
-                        <button type="submit" name="loginButton">Login</button>
-                    </form>
-                </div>
-                }
-
-                {this.state.isLogged &&
-                <div>
-                    <header>
-                        <p>Account name: {this.state.accountName}</p>
-                        <p>Account address: {this.state.accountAddress}</p>
-                        <button onClick={this.handleLoggout}>Logout</button>
-                    </header>
-                    <div>
-                        <h3>Porfolio assets</h3>
-                        {this.state.name}
-                        <div>
-                            <h4>Fiat Token</h4>
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <th>Asset</th>
-                                        <th>Symbol</th>
-                                        <th>Total</th>
-                                    </tr>
-                                </tbody>
-                                <tbody>
-                                    {this.renderAssets(this.state.listedAssets)}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                }
+                {!this.state.isLogged && this.renderUIforLoggedOutUser()}
+                {this.state.isLogged && this.renderUIforLoggedUser()}
             </div>
         );
     }
+
+    renderUIforLoggedOutUser = () =>
+        <div>
+            <h2>Account creation</h2>
+            <form onSubmit={this.createAccount}>
+                <p>{this.state.accountNameError}</p>
+                <input type="text" name="accountName" placeholder="Account name"
+                       onChange={this.handleAccountFormChange}/>
+                <input type="password" name="accountPassword" placeholder="password"
+                       onChange={this.handleAccountFormChange}/>
+                <button type="submit" name="createAccountButton">Create account</button>
+            </form>
+
+            <h2>Login</h2>
+            <form onSubmit={this.handleLogin}>
+                <input type="text" name="accountName" placeholder="Account name"
+                       onChange={this.handleAccountFormChange}/>
+                <input type="password" name="accountPassword" placeholder="password"
+                       onChange={this.handleAccountFormChange}/>
+                <button type="submit" name="loginButton">Login</button>
+            </form>
+        </div>;
+
+    renderUIforLoggedUser = () =>
+        <div>
+            <header>
+                <p>Account name: {this.state.accountName}</p>
+                <p>Account address: {this.state.accountAddress}</p>
+                <p>ETH: {this.state.ethBalance}</p>
+                <button onClick={this.getEther}>Get Ether</button>
+                <button onClick={this.handleLoggout}>Logout</button>
+            </header>
+            <div>
+                <h3>Porfolio assets</h3>
+                <div>
+                    <h4>Fiat Token</h4>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Symbol</th>
+                            <th>Total</th>
+                        </tr>
+                        </tbody>
+                        <tbody>
+                        {this.renderAssets(this.state.listedAssets)}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>;
 
     renderAssets = assets => assets.map((asset, key) => this.renderAsset(asset, key));
 
@@ -242,24 +211,36 @@ class App extends Component {
         this.setState({accountAddress: account.address, isLogged: true});
     };
 
-    handleClick = async () => {
-        // try {
-        //     console.log(web3.eth.accounts.decrypt(privateKey, 'basdf'));
-        // } catch (error) {
-        //     console.log("Wrong password");
-        // }
-        const {web3, accounts, crowdsale, fiat} = this.state;
-        const recepient = accounts[2];
-        const PK = 'cdfc4f16d1f8c950cca8291fc3436444b44f7bda200d58e25652231b4919dc88';
+    handleLoggout = () => {
+        localStorage.removeItem('trading.session');
+        this.setState({
+            isLogged: false,
+            accountName: '',
+            accountAddress: ''
+        });
+    };
 
-        const bPK = Buffer.from(PK, 'hex');
+    getEther = () => {
+        // TODO: add params to mirror sending on network.
+        this.sendTransaction();
+    };
 
-        await web3.eth.getTransactionCount(accounts[1], async (err, txCount) => {
+    sendTransaction = async () => {
+        const { web3, accounts } = this.state;
+        const suggar = accounts[0];
+        const suggarPk = 'a6d7628134ae486c39a7adc4ea0265aca9febc53d3771f656456ea52ce7e1236';
+
+        const session = JSON.parse(localStorage.getItem('trading.session'));
+        const recipient = session.address;
+
+        const bPK = Buffer.from(suggarPk, 'hex');
+
+        await web3.eth.getTransactionCount(suggar, async (err, txCount) => {
             // Build transaction
             const txObject = {
                 nonce: web3.utils.toHex(txCount),
-                to: crowdsale.options.address,
-                value: web3.utils.toHex(web3.utils.toWei('0.005')),
+                to: recipient,
+                value: web3.utils.toHex(web3.utils.toWei('10')),
                 gasLimit: web3.utils.toHex(210000),
                 gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
             };
@@ -277,16 +258,11 @@ class App extends Component {
                 else console.log('txHash: ', txHash);
             });
         });
-    }
 
-    handleLoggout = () => {
-        localStorage.removeItem('trading.session');
-        this.setState({
-            isLogged: false,
-            accountName: '',
-            accountAddress: ''
-        });
-    }
+        const ethBalanceInWei = await web3.eth.getBalance(session.address);
+        const ethBalance = await web3.utils.fromWei(ethBalanceInWei);
+        this.setState({ ethBalance });
+    };
 
 }
 
