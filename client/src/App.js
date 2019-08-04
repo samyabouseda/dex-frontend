@@ -18,6 +18,7 @@ class App extends Component {
         accountNameError: '',
         accountAddress: '',
         isLogged: false,
+        session: null,
 
         // Assets
         ethBalance: 0,
@@ -76,14 +77,15 @@ class App extends Component {
     initAccount = async web3 => {
         const sessionString = localStorage.getItem('trading.session');
         if (sessionString != null) {
-            const session = JSON.parse(sessionString);
-            const ethBalanceInWei = await web3.eth.getBalance(session.address);
-            const ethBalance = await web3.utils.fromWei(ethBalanceInWei);
+            const session = await JSON.parse(sessionString);
+            const ethBalance = await this.getEtherBalanceOf(session.address);
+            console.log(ethBalance);
             this.setState({
                 isLogged: session.isLogged,
                 accountName: session.accountName,
                 accountAddress: session.address,
                 ethBalance,
+                session,
             });
         }
     };
@@ -192,7 +194,7 @@ class App extends Component {
         else alert("The account " + accountName + " doesn't exists.");
     };
 
-    login = (name, password) => {
+    login = async (name, password) => {
         const { web3 } = this.state;
         // Decrypt account
         const encryptedAccount = JSON.parse(localStorage.getItem(name));
@@ -207,8 +209,9 @@ class App extends Component {
         };
         localStorage.setItem('trading.session', JSON.stringify(session));
 
+        const ethBalance = await this.getEtherBalanceOf(session.address);
         // Update app state
-        this.setState({accountAddress: account.address, isLogged: true});
+        this.setState({accountAddress: account.address, isLogged: true, session, ethBalance});
     };
 
     handleLoggout = () => {
@@ -216,38 +219,50 @@ class App extends Component {
         this.setState({
             isLogged: false,
             accountName: '',
-            accountAddress: ''
+            accountAddress: '',
+            session: null,
         });
     };
 
-    getEther = () => {
-        // TODO: add params to mirror sending on network.
-        this.sendTransaction();
+    getEther = async () => {
+        const { accounts, session } = this.state;
+
+        // Suggar account
+        const suggar = {
+            address: accounts[0],
+            pk: 'a6d7628134ae486c39a7adc4ea0265aca9febc53d3771f656456ea52ce7e1236'
+        };
+
+        const recipient = session.address;
+        await this.sendTransaction(suggar, recipient, 0.005);
+
+        const ethBalance = await this.getEtherBalanceOf(session.address);
+        this.setState({ ethBalance });
     };
 
-    sendTransaction = async () => {
-        const { web3, accounts } = this.state;
-        const suggar = accounts[0];
-        const suggarPk = 'a6d7628134ae486c39a7adc4ea0265aca9febc53d3771f656456ea52ce7e1236';
+    getEtherBalanceOf = async address => {
+        const { web3 } = this.state;
+        const ethBalance = await web3.eth.getBalance(address);
+        return await web3.utils.fromWei(ethBalance);
+    };
 
-        const session = JSON.parse(localStorage.getItem('trading.session'));
-        const recipient = session.address;
-
-        const bPK = Buffer.from(suggarPk, 'hex');
-
-        await web3.eth.getTransactionCount(suggar, async (err, txCount) => {
+    sendTransaction = async (from, to, value) => {
+        const { web3 } = this.state;
+        const bufferedPk = Buffer.from(from.pk, 'hex');
+        try {
             // Build transaction
+            const txCount = await web3.eth.getTransactionCount(from.address);
             const txObject = {
                 nonce: web3.utils.toHex(txCount),
-                to: recipient,
-                value: web3.utils.toHex(web3.utils.toWei('10')),
+                to: to,
+                value: web3.utils.toHex(web3.utils.toWei(value.toString(), 'ether')),
                 gasLimit: web3.utils.toHex(210000),
                 gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
             };
 
             // Sign the transaction
             const tx = new Tx(txObject);
-            tx.sign(bPK);
+            tx.sign(bufferedPk);
 
             const serializedTx = tx.serialize();
             const raw = '0x' + serializedTx.toString('hex');
@@ -257,11 +272,11 @@ class App extends Component {
                 if (err) console.log(err);
                 else console.log('txHash: ', txHash);
             });
-        });
 
-        const ethBalanceInWei = await web3.eth.getBalance(session.address);
-        const ethBalance = await web3.utils.fromWei(ethBalanceInWei);
-        this.setState({ ethBalance });
+        } catch(error) {
+            alert("Could not send transaction.");
+            console.log(error);
+        }
     };
 
 }
