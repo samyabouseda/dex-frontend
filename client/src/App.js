@@ -21,11 +21,11 @@ class App extends Component {
         session: null,
 
         // Assets
-        ethBalance: 0,
-        usdxBalance: 0,
         listedAssets: [
-            { name: "US Dollar X", symbol: "USDX", balanceOf: "500" },
-            { name: "Ethereum", symbol: "ETH", balanceOf: "130" }
+            // TODO: Get the metadata dynamically.
+            { name: "Ethereum", symbol: "ETH", balanceOf: 0 },
+            { name: "US Dollar X", symbol: "USDX", balanceOf: 0 },
+            { name: "Apple Inc.", symbol: "AAPL", balanceOf: 0 },
         ],
 
         // Trade
@@ -85,17 +85,23 @@ class App extends Component {
         const sessionString = localStorage.getItem('trading.session');
         if (sessionString != null) {
             const session = await JSON.parse(sessionString);
-            const ethBalance = await this.getEtherBalanceOf(session.address);
-            const usdxBalance = await this.getUSDXBalanceOf(session.address);
             this.setState({
                 isLogged: session.isLogged,
                 accountName: session.accountName,
                 accountAddress: session.address,
-                ethBalance,
-                usdxBalance,
                 session,
             });
+            this.updateBalancesOf(session.address);
         }
+    };
+
+    updateBalancesOf = async (account) => {
+        const ethBalance = await this.getEtherBalanceOf(account);
+        const usdxBalance = await this.getUSDXBalanceOf(account);
+        let listedAssets = this.state.listedAssets;
+        listedAssets[0].balanceOf = ethBalance;
+        listedAssets[1].balanceOf = usdxBalance;
+        this.setState({ listedAssets });
     };
 
     render() {
@@ -138,16 +144,21 @@ class App extends Component {
             <header>
                 <p>Account name: {this.state.accountName}</p>
                 <p>Account address: {this.state.accountAddress}</p>
-                <p>ETH: {this.state.ethBalance}</p>
-                <p>USDX: {this.state.usdxBalance}</p>
-                <button onClick={this.getEther}>Get Ether</button>
+                <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
+                <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
+                <button onClick={this.handleLoggout}>Logout</button>
+            </header>
+
+            <section>
+                <div>
+                    <button onClick={this.getEther}>Get Ether</button>
+                </div>
 
                 <div>
                     <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
                     <button onClick={this.buyFiat}>Buy fiat</button>
                 </div>
-                <button onClick={this.handleLoggout}>Logout</button>
-            </header>
+            </section>
             <div>
                 <h3>Porfolio assets</h3>
                 <div>
@@ -256,8 +267,7 @@ class App extends Component {
         const recipient = session.address;
         await this.sendTransaction(suggar, recipient, 0.5);
 
-        const ethBalance = await this.getEtherBalanceOf(session.address);
-        this.setState({ ethBalance });
+        this.updateBalancesOf(recipient);
     };
 
     getEtherBalanceOf = async address => {
@@ -331,9 +341,14 @@ class App extends Component {
 
         await this.sendTransaction(from, to, value);
 
-        const usdxBalance = await this.getUSDXBalanceOf(session.address);
-        this.setState({ usdxBalance });
+        this.updateBalancesOf(session.address);
     };
+
+    sellFiat = async () => {
+        // Sell the amount of fiat entered in the input.
+        // Transfer fiat to crowdsale and receive Ether.
+        // Update balances in state.
+    }
 
 }
 
