@@ -1,6 +1,8 @@
 import React, {Component} from "react";
-import FiatCrowdsale from "./contracts/FiatCrowdsale.json";
+import FiatCrowdsale from "./contracts/FiatCrowdsale";
 import Fiat from "./contracts/Fiat";
+import Stock from "./contracts/Stock";
+import StockICO from "./contracts/StockICO";
 import getWeb3 from "./utils/getWeb3";
 import "./App.css";
 
@@ -30,6 +32,7 @@ class App extends Component {
 
         // Trade
         fiatToBuy: 0,
+        stockToBuy: 0,
 
         // Contracts
         contracts: {},
@@ -53,25 +56,25 @@ class App extends Component {
     };
 
     initContracts = async web3 => {
-        // Get the contract instances.
-        const networkId = await web3.eth.net.getId();
-
-        const deployedNetwork = FiatCrowdsale.networks[networkId];
-        const crowdsale = new web3.eth.Contract(
-            FiatCrowdsale.abi,
-            deployedNetwork && deployedNetwork.address,
-        );
-
-        const deployedNetworkFiat = Fiat.networks[networkId];
-        const fiat = await new web3.eth.Contract(
-            Fiat.abi,
-            deployedNetworkFiat && deployedNetworkFiat.address,
-        );
-
+        const fiat = await this.initContract(Fiat, web3);
+        const crowdsale = await this.initContract(FiatCrowdsale, web3);
+        const stock = await this.initContract(Stock, web3);
+        const stockCrowdalse = await this.initContract(StockICO, web3);
         return {
             fiat: fiat,
-            crowdsale: crowdsale
+            crowdsale: crowdsale,
+            stock: stock,
+            stockCrowdalse: stockCrowdalse,
         };
+    };
+
+    initContract = async (contract, web3) => {
+        const networkId = await web3.eth.net.getId();
+        const deployedNetwork = contract.networks[networkId];
+        return await new web3.eth.Contract(
+            contract.abi,
+            deployedNetwork && deployedNetwork.address,
+        );
     };
 
     initEventWatching = async contracts => {
@@ -98,9 +101,11 @@ class App extends Component {
     updateBalancesOf = async (account) => {
         const ethBalance = await this.getEtherBalanceOf(account);
         const usdxBalance = await this.getUSDXBalanceOf(account);
+        const aaplBalance = await this.getAAPLBalanceOf(account);
         let listedAssets = this.state.listedAssets;
         listedAssets[0].balanceOf = ethBalance;
         listedAssets[1].balanceOf = usdxBalance;
+        listedAssets[2].balanceOf = aaplBalance;
         this.setState({ listedAssets });
     };
 
@@ -158,6 +163,11 @@ class App extends Component {
                     <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
                     <button onClick={this.buyFiat}>Buy fiat</button>
                 </div>
+
+                <div>
+                    <input type="text" name="stockToBuy" placeholder="Amount in USDX" onChange={this.handleStockInputChange}/>
+                    <button onClick={this.buyStock}>Buy stock</button>
+                </div>
             </section>
             <div>
                 <h3>Porfolio assets</h3>
@@ -204,6 +214,11 @@ class App extends Component {
     handleFiatInputChange = (event) => {
         const text = event.target.value;
         this.setState({ fiatToBuy: text });
+    };
+
+    handleStockInputChange = (event) => {
+        const text = event.target.value;
+        this.setState({ stockToBuy: text });
     };
 
     createAccount = async (event) => {
@@ -282,6 +297,13 @@ class App extends Component {
         return await web3.utils.fromWei(balance);
     };
 
+    getAAPLBalanceOf = async address => {
+        const { web3, contracts } = this.state;
+        const balance = await contracts.stock.methods.balanceOf(address).call();
+        console.log(balance);
+        return balance;
+    };
+
     sendTransaction = async (from, to, value) => {
         const { web3 } = this.state;
         const bufferedPk = Buffer.from(from.pk.substr(2), 'hex');
@@ -296,7 +318,6 @@ class App extends Component {
                 gasLimit: web3.utils.toHex(210000),
                 gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
             };
-
             console.log(txObject);
 
             let tx;
@@ -305,6 +326,7 @@ class App extends Component {
                 tx = new Tx(txObject);
                 tx.sign(bufferedPk);
             } catch(error) {
+                console.log(error);
                 console.log("signing didn't work.")
             }
 
@@ -348,7 +370,75 @@ class App extends Component {
         // Sell the amount of fiat entered in the input.
         // Transfer fiat to crowdsale and receive Ether.
         // Update balances in state.
-    }
+    };
+
+    buyStock = async () => {
+        const { contracts, session, web3 } = this.state;
+        const ico = contracts.stockCrowdalse;
+        const encryptedAccount = JSON.parse(localStorage.getItem(this.state.accountName));
+        const account = web3.eth.accounts.decrypt(encryptedAccount, 'foobar');
+
+        const address = account.address;
+        const privateKey = account.privateKey.substr(2);
+        const from = {
+            address: address,
+            privateKey: privateKey,
+        };
+        const to = ico.options.address;
+        const jsonInterface = {
+            name: 'buyStock',
+            type: 'function',
+            inputs: [
+                {
+                    type: 'uint256',
+                    name: '_fiatAmount'
+                },
+            ]
+        };
+        const parameters = [this.state.stockToBuy];
+
+        console.log(parameters);
+        const encodedFunctionCall = web3.eth.abi.encodeFunctionCall(jsonInterface, parameters);
+
+        console.log(encodedFunctionCall);
+
+        let txObject;
+        try {
+            const txCount = await web3.eth.getTransactionCount(from.address);
+            txObject = {
+                nonce: web3.utils.toHex(txCount),
+                to: to,
+                data: encodedFunctionCall,
+                gasLimit: web3.utils.toHex(210000),
+                gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
+            };
+
+            console.log(txObject);
+        } catch(error) {
+            console.log(error);
+        }
+
+        const bufferedPk = Buffer.from(from.privateKey, 'hex');
+
+        let tx;
+        try {
+            tx = new Tx(txObject);
+            tx.sign(bufferedPk);
+        } catch(error) {
+            console.log(error);
+        }
+
+        const serializedTx = tx.serialize();
+        const raw = '0x' + serializedTx.toString('hex');
+
+        // Broadcast the transaction
+        await web3.eth.sendSignedTransaction(raw, (err, txHash) => {
+            if (err) console.log(err);
+            else console.log('txHash: ', txHash);
+        });
+
+        this.updateBalancesOf(session.address);
+    };
 
 }
 

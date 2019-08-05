@@ -1704,12 +1704,12 @@
         }
       },
       "links": {},
-      "address": "0x4802266a6b8Bff06539c9302ccA2BF81af2cD907",
-      "transactionHash": "0xf82ba7e3005859994264aecb2bdf64fc51c576765652e3b3ec16384452613d80"
+      "address": "0x4360577a51AA1B663aD808719E99449ACBd769f9",
+      "transactionHash": "0x33cff07b878214dcd67389627280dab0e5ecd3fdda12a32cdea8a9bd8f10fa91"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-05T14:31:27.599Z",
+  "updatedAt": "2019-08-05T14:58:14.137Z",
   "devdoc": {
     "methods": {
       "allowance(address,address)": {

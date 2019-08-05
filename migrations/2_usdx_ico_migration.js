@@ -1,13 +1,18 @@
 const Fiat = artifacts.require('Fiat');
 const FiatCrowdsale = artifacts.require('FiatCrowdsale');
+const Stock = artifacts.require('Stock');
+const StockICO = artifacts.require('StockICO');
+const AAPL_INITIAL_SUPPLY = 4601075000;
 
 module.exports = async function(deployer, network, accounts) {
     let owner;
+    let appleWallet;
 
     if (network === "live") {
         // Do something specific to the network named "live".
     } else {
         owner = await accounts[0];
+        appleWallet = await accounts[1];
     }
 
     const fiat = await deployer.deploy(
@@ -15,7 +20,7 @@ module.exports = async function(deployer, network, accounts) {
         "US Dollar",
         "USDX",
         2,
-        // from address goes here.
+        { from: owner },
     );
 
     const rate = 200;
@@ -24,12 +29,33 @@ module.exports = async function(deployer, network, accounts) {
         rate,
         owner,
         fiat.address,
-        // from address goes here.
+        { from: owner },
     );
-
     await fiat.addMinter(fiatCrowdsale.address);
     await fiat.transferOwnership(fiatCrowdsale.address);
 
-    // Federal Reserve mints initial supply.
+    // Federal Reserve mints initial supply. Really needed ?
     await fiat.mint(owner, 1700000000000000, { from: owner });
+
+    // Stock config
+    const stock = await deployer.deploy(
+        Stock,
+        "Apple Inc.",
+        "AAPL",
+        AAPL_INITIAL_SUPPLY,
+        { from: appleWallet }
+    );
+
+    // StockICO config
+    const pricePerShare = 200;
+    const stockICO = await deployer.deploy(
+        StockICO,
+        stock.address,
+        fiat.address,
+        pricePerShare,
+        { from: appleWallet }
+    );
+
+    await stock.transfer(stockICO.address, AAPL_INITIAL_SUPPLY, { from: appleWallet });
+    await stock.transferOwnership(stockICO.address, { from: appleWallet });
 };
