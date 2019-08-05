@@ -22,10 +22,17 @@ class App extends Component {
 
         // Assets
         ethBalance: 0,
+        usdxBalance: 0,
         listedAssets: [
             { name: "US Dollar X", symbol: "USDX", balanceOf: "500" },
             { name: "Ethereum", symbol: "ETH", balanceOf: "130" }
         ],
+
+        // Trade
+        fiatToBuy: 0,
+
+        // Contracts
+        contracts: {},
 
     };
 
@@ -36,7 +43,7 @@ class App extends Component {
             const contracts = await this.initContracts(web3);
             this.initEventWatching(contracts);
             this.initAccount(web3);
-            this.setState({web3, accounts, contracts });
+            this.setState({ web3, accounts, contracts });
         } catch (error) {
             alert(
                 `Failed to load web3, accounts, or contract. Check console for details.`,
@@ -79,12 +86,13 @@ class App extends Component {
         if (sessionString != null) {
             const session = await JSON.parse(sessionString);
             const ethBalance = await this.getEtherBalanceOf(session.address);
-            console.log(ethBalance);
+            const usdxBalance = await this.getUSDXBalanceOf(session.address);
             this.setState({
                 isLogged: session.isLogged,
                 accountName: session.accountName,
                 accountAddress: session.address,
                 ethBalance,
+                usdxBalance,
                 session,
             });
         }
@@ -131,7 +139,13 @@ class App extends Component {
                 <p>Account name: {this.state.accountName}</p>
                 <p>Account address: {this.state.accountAddress}</p>
                 <p>ETH: {this.state.ethBalance}</p>
+                <p>USDX: {this.state.usdxBalance}</p>
                 <button onClick={this.getEther}>Get Ether</button>
+
+                <div>
+                    <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
+                    <button onClick={this.buyFiat}>Buy fiat</button>
+                </div>
                 <button onClick={this.handleLoggout}>Logout</button>
             </header>
             <div>
@@ -176,6 +190,11 @@ class App extends Component {
         }
     };
 
+    handleFiatInputChange = (event) => {
+        const text = event.target.value;
+        this.setState({ fiatToBuy: text });
+    };
+
     createAccount = async (event) => {
         event.preventDefault();
         const {web3, accountName, accountPassword} = this.state;
@@ -210,8 +229,9 @@ class App extends Component {
         localStorage.setItem('trading.session', JSON.stringify(session));
 
         const ethBalance = await this.getEtherBalanceOf(session.address);
+        const usdxBalance = await this.getUSDXBalanceOf(session.address);
         // Update app state
-        this.setState({accountAddress: account.address, isLogged: true, session, ethBalance});
+        this.setState({accountAddress: account.address, isLogged: true, session, ethBalance, usdxBalance});
     };
 
     handleLoggout = () => {
@@ -230,11 +250,11 @@ class App extends Component {
         // Suggar account
         const suggar = {
             address: accounts[0],
-            pk: 'a6d7628134ae486c39a7adc4ea0265aca9febc53d3771f656456ea52ce7e1236'
+            pk: '0x17437df3163604090b5254f80bbffeb654b76221fdeef525a2e79fc27060d0a8'
         };
 
         const recipient = session.address;
-        await this.sendTransaction(suggar, recipient, 0.005);
+        await this.sendTransaction(suggar, recipient, 0.5);
 
         const ethBalance = await this.getEtherBalanceOf(session.address);
         this.setState({ ethBalance });
@@ -242,13 +262,20 @@ class App extends Component {
 
     getEtherBalanceOf = async address => {
         const { web3 } = this.state;
-        const ethBalance = await web3.eth.getBalance(address);
-        return await web3.utils.fromWei(ethBalance);
+        const balance = await web3.eth.getBalance(address);
+        return await web3.utils.fromWei(balance);
+    };
+
+    getUSDXBalanceOf = async address => {
+        const { web3, contracts } = this.state;
+        const balance = await contracts.fiat.methods.balanceOf(address).call();
+        return await web3.utils.fromWei(balance);
     };
 
     sendTransaction = async (from, to, value) => {
         const { web3 } = this.state;
-        const bufferedPk = Buffer.from(from.pk, 'hex');
+        const bufferedPk = Buffer.from(from.pk.substr(2), 'hex');
+
         try {
             // Build transaction
             const txCount = await web3.eth.getTransactionCount(from.address);
@@ -260,9 +287,16 @@ class App extends Component {
                 gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
             };
 
-            // Sign the transaction
-            const tx = new Tx(txObject);
-            tx.sign(bufferedPk);
+            console.log(txObject);
+
+            let tx;
+            try {
+                // Sign the transaction
+                tx = new Tx(txObject);
+                tx.sign(bufferedPk);
+            } catch(error) {
+                console.log("signing didn't work.")
+            }
 
             const serializedTx = tx.serialize();
             const raw = '0x' + serializedTx.toString('hex');
@@ -277,6 +311,28 @@ class App extends Component {
             alert("Could not send transaction.");
             console.log(error);
         }
+    };
+
+    buyFiat = async () => {
+        const { session, contracts, web3, fiatToBuy } = this.state;
+
+        const encryptedAccount = JSON.parse(localStorage.getItem(this.state.accountName));
+        const account = web3.eth.accounts.decrypt(encryptedAccount, 'foobar');
+
+        // Rate should/could be dynamic.
+        const rate = await contracts.crowdsale.methods.rate().call();
+
+        const from = {
+            address: account.address,
+            pk: account.privateKey,
+        };
+        const to = contracts.crowdsale.options.address;
+        const value = fiatToBuy / rate;
+
+        await this.sendTransaction(from, to, value);
+
+        const usdxBalance = await this.getUSDXBalanceOf(session.address);
+        this.setState({ usdxBalance });
     };
 
 }
