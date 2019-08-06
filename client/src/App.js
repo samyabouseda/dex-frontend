@@ -3,6 +3,7 @@ import FiatCrowdsale from "./contracts/FiatCrowdsale";
 import Fiat from "./contracts/Fiat";
 import Stock from "./contracts/Stock";
 import StockICO from "./contracts/StockICO";
+import DEX from "./contracts/DEX";
 import getWeb3 from "./utils/getWeb3";
 import "./App.css";
 
@@ -64,11 +65,16 @@ class App extends Component {
         // Stock
         const stock = await this.initContract(Stock, web3);
         const stockCrowdalse = await this.initContract(StockICO, web3);
+
+        // DEX
+        const dex = await this.initContract(DEX, web3);
+
         return {
             fiat: fiat,
             crowdsale: crowdsale,
             stock: stock,
             stockCrowdalse: stockCrowdalse,
+            dex: dex,
         };
     };
 
@@ -172,6 +178,10 @@ class App extends Component {
                     <input type="text" name="stockToBuy" placeholder="Amount in USDX" onChange={this.handleStockInputChange}/>
                     <button onClick={this.buyStock}>Buy stock</button>
                 </div>
+
+                <div>
+                    <button onClick={this.deposit}>Deposit</button>
+                </div>
             </section>
             <div>
                 <h3>Porfolio assets</h3>
@@ -274,21 +284,6 @@ class App extends Component {
         });
     };
 
-    getEther = async () => {
-        const { accounts, session } = this.state;
-
-        // Suggar account
-        const suggar = {
-            address: accounts[0],
-            pk: '0x17437df3163604090b5254f80bbffeb654b76221fdeef525a2e79fc27060d0a8'
-        };
-
-        const recipient = session.address;
-        await this.sendTransaction(suggar, recipient, 0.5);
-
-        this.updateBalancesOf(recipient);
-    };
-
     getEtherBalanceOf = async address => {
         const { web3 } = this.state;
         const balance = await web3.eth.getBalance(address);
@@ -302,70 +297,42 @@ class App extends Component {
     };
 
     getAAPLBalanceOf = async address => {
-        const { web3, contracts } = this.state;
+        const { contracts } = this.state;
         const balance = await contracts.stock.methods.balanceOf(address).call();
         console.log(balance);
         return balance;
     };
 
-    sendTransaction = async (from, to, value) => {
-        const { web3 } = this.state;
-        const bufferedPk = Buffer.from(from.pk.substr(2), 'hex');
+    getEther = async () => {
+        const { accounts, session, web3 } = this.state;
 
-        try {
-            // Build transaction
-            const txCount = await web3.eth.getTransactionCount(from.address);
-            const txObject = {
-                nonce: web3.utils.toHex(txCount),
-                to: to,
-                value: web3.utils.toHex(web3.utils.toWei(value.toString(), 'ether')),
-                gasLimit: web3.utils.toHex(210000),
-                gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
-            };
-            console.log(txObject);
+        // Suggar account
+        const suggar = {
+            address: accounts[0],
+            privateKey: '0x17437df3163604090b5254f80bbffeb654b76221fdeef525a2e79fc27060d0a8'.substr(2),
+        };
+        const to = session.address;
+        const value = web3.utils.toHex(web3.utils.toWei('0.5', 'ether'));
+        const data = '';
 
-            let tx;
-            try {
-                // Sign the transaction
-                tx = new Tx(txObject);
-                tx.sign(bufferedPk);
-            } catch(error) {
-                console.log(error);
-                console.log("signing didn't work.")
-            }
+        await this.sendTransaction(suggar, to, value, data, true);
 
-            const serializedTx = tx.serialize();
-            const raw = '0x' + serializedTx.toString('hex');
-
-            // Broadcast the transaction
-            await web3.eth.sendSignedTransaction(raw, (err, txHash) => {
-                if (err) console.log(err);
-                else console.log('txHash: ', txHash);
-            });
-
-        } catch(error) {
-            alert("Could not send transaction.");
-            console.log(error);
-        }
+        this.updateBalancesOf(session.address);
     };
 
     buyFiat = async () => {
-        const { session, contracts, web3, fiatToBuy } = this.state;
-
-        const encryptedAccount = JSON.parse(localStorage.getItem(this.state.accountName));
-        const account = web3.eth.accounts.decrypt(encryptedAccount, 'foobar');
+        const { session, contracts, fiatToBuy } = this.state;
 
         // Rate should/could be dynamic.
         const rate = await contracts.crowdsale.methods.rate().call();
-
         const from = {
-            address: account.address,
-            pk: account.privateKey,
+            address: session.address,
+            privateKey: session.pk.substr(2),
         };
         const to = contracts.crowdsale.options.address;
-        const value = fiatToBuy / rate;
+        const value = fiatToBuy / rate * 1000000000000000000;
 
-        await this.sendTransaction(from, to, value);
+        await this.sendTransaction(from, to, value, '');
 
         this.updateBalancesOf(session.address);
     };
@@ -378,17 +345,11 @@ class App extends Component {
 
     buyStock = async () => {
         const { contracts, session, web3 } = this.state;
-        const ico = contracts.stockCrowdalse;
-        const encryptedAccount = JSON.parse(localStorage.getItem(this.state.accountName));
-        const account = web3.eth.accounts.decrypt(encryptedAccount, 'foobar');
-
-        const address = account.address;
-        const privateKey = account.privateKey.substr(2);
         const from = {
-            address: address,
-            privateKey: privateKey,
+            address: session.address,
+            privateKey: session.pk.substr(2),
         };
-        const to = ico.options.address;
+        const to = contracts.stockCrowdalse.options.address;
         const jsonInterface = {
             name: 'buyStock',
             type: 'function',
@@ -400,48 +361,109 @@ class App extends Component {
             ]
         };
         const parameters = [this.state.stockToBuy];
+        const data = web3.eth.abi.encodeFunctionCall(jsonInterface, parameters);
+        const value = '';
 
-        console.log(parameters);
-        const encodedFunctionCall = web3.eth.abi.encodeFunctionCall(jsonInterface, parameters);
+        this.sendTransaction(from, to, value, data);
 
-        console.log(encodedFunctionCall);
+        this.updateBalancesOf(session.address);
+    };
 
-        let txObject;
-        try {
-            const txCount = await web3.eth.getTransactionCount(from.address);
-            txObject = {
-                nonce: web3.utils.toHex(txCount),
-                to: to,
-                data: encodedFunctionCall,
-                gasLimit: web3.utils.toHex(210000),
-                gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
-            };
+    deposit = async () => {
+        const { contracts, session, web3 } = this.state;
 
-            console.log(txObject);
-        } catch(error) {
-            console.log(error);
-        }
+        // Routing setup.
+        const from = {
+            address: session.address,
+            privateKey: session.pk.substr(2),
+        };
+        const to = contracts.dex.options.address;
 
-        const bufferedPk = Buffer.from(from.privateKey, 'hex');
+        // Build deposit object.
+        // const jsonInterface = this.getJsonInterfaceFor(contract, functionName);
+        // const deposit = this.getEncodedFunctionCall(jsonInterface, params); params is array
+        const jsonInterface = {
+            name: 'deposit',
+            type: 'function',
+            inputs: [
+                {
+                    type: 'address',
+                    name: 'token'
+                },
+                {
+                    type: 'uint256',
+                    name: 'amount'
+                },
+            ]
+        };
+        const params = [contracts.fiat.options.address, 10000000000000];
+        const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
+        const value = '';
 
+        this.sendTransaction(from, to, value, data);
+
+        this.updateBalancesOf(session.address);
+        let dexBalance = await contracts.fiat.methods.balanceOf(contracts.dex.options.address).call();
+        console.log(dexBalance);
+    };
+
+    placeOrder = async () => {
+        // Build order object
+        // Sing order object
+        // sender order objet and signature to Order Book
+    };
+
+    sendTransaction = async (from, to, value, data) => {
+        // Build transaction object.
+        const txObject = await this.buildTransactionObject(from, to, value, data);
+
+        // Sign transaction object.
+        const tx = this.signTransaction(txObject, from.privateKey);
+
+        // Broadcast the transaction.
+        await this.sendSignedTransaction(tx);
+    };
+
+    buildTransactionObject = async (from, to, value, data) => {
+        const { web3 } = this.state;
+        return new Promise(async function(resolve, reject) {
+            let txObject;
+            try {
+                const txCount = await web3.eth.getTransactionCount(from.address);
+                txObject = {
+                    nonce: web3.utils.toHex(txCount),
+                    to: to,
+                    data: data,
+                    value: value,
+                    gasLimit: web3.utils.toHex(210000),
+                    gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
+                };
+                resolve(txObject);
+            } catch(error) {
+                reject(error);
+            }
+        });
+    };
+
+    signTransaction = (txData, privateKey) => {
+        const bufferedPk = Buffer.from(privateKey, 'hex');
         let tx;
         try {
-            tx = new Tx(txObject);
+            tx = new Tx(txData);
             tx.sign(bufferedPk);
         } catch(error) {
             console.log(error);
         }
-
         const serializedTx = tx.serialize();
-        const raw = '0x' + serializedTx.toString('hex');
+        return '0x' + serializedTx.toString('hex');
+    };
 
-        // Broadcast the transaction
-        await web3.eth.sendSignedTransaction(raw, (err, txHash) => {
+    sendSignedTransaction = async tx => {
+        const { web3 } = this.state;
+        await web3.eth.sendSignedTransaction(tx, (err, txHash) => {
             if (err) console.log(err);
             else console.log('txHash: ', txHash);
         });
-
-        this.updateBalancesOf(session.address);
     };
 
 }

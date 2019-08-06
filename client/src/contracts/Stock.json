@@ -1905,12 +1905,12 @@
         }
       },
       "links": {},
-      "address": "0x77643aBf58057Dbb476b4D0255727f46aabf195f",
-      "transactionHash": "0x75fa12ffc5d145e3cc52d71aad01461cac6de5c3876f6a620dadd42cf23db035"
+      "address": "0x7Fa5D0459444B46DF65A5d7b740E88455F3E911d",
+      "transactionHash": "0xb6bb6491219583f4c90c994e75ff9935dffc26e79b670fc217b648e8ff6f52f3"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-06T10:45:25.073Z",
+  "updatedAt": "2019-08-06T15:07:14.886Z",
   "devdoc": {
     "methods": {
       "allowance(address,address)": {

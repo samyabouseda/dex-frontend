@@ -4746,12 +4746,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x97D9eC79725dCb4491b048AFf3f98AEcAfe4fB4F",
-      "transactionHash": "0xd79ecf94206a8e2a23dcc5847442dc396989b170f45eada61fde2b262511749c"
+      "address": "0xcf60FE0D5E6e8239b33F40d2F3A721B4b33b4d85",
+      "transactionHash": "0x894c766a93c90abe20b931fa461f650a6dddc19ddc279e2e20106020a65ce1c8"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-06T10:45:25.075Z",
+  "updatedAt": "2019-08-06T15:07:14.891Z",
   "devdoc": {
     "methods": {
       "buyStock(uint256)": {

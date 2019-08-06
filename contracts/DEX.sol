@@ -7,6 +7,7 @@ import "./Approvable.sol";
 contract DEX {
     using SafeMath for uint256;
 
+    address private _owner;
     address private _matchingEngine;
     mapping (address => mapping (address => uint256)) private _tokens;
 
@@ -30,8 +31,13 @@ contract DEX {
         uint256 nonce
     );
 
-    constructor () public {
-        _matchingEngine == msg.sender; // Or we can hard code the matching engine address directly.
+    constructor (address matchingEngine) public {
+        _matchingEngine = matchingEngine;
+        _owner == msg.sender; // Or we can hard code the matching engine address directly.
+    }
+
+    function matchingEngine() public view returns (address) {
+        return _matchingEngine;
     }
 
     function deposit(address token, uint256 amount) public {
@@ -55,7 +61,6 @@ contract DEX {
         bytes memory signature
     ) public {
         Trade memory trade = Trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce);
-        require(msg.sender == _matchingEngine);
         require(isValidSignature(trade, signature));
 
         // Token exchange

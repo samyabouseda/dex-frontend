@@ -14,6 +14,7 @@ const Fiat = artifacts.require('Fiat');
 const FiatCrowdsale = artifacts.require('FiatCrowdsale');
 const Stock = artifacts.require('Stock');
 const StockICO = artifacts.require('StockICO');
+const DEX = artifacts.require('DEX');
 
 contract('StockICO', async accounts => {
 
@@ -58,6 +59,10 @@ contract('StockICO', async accounts => {
         );
         await this.stock.transfer(this.stockICO.address, AAPL_INITIAL_SUPPLY, { from: this.appleWallet });
         await this.stock.transferOwnership(this.stockICO.address, { from: this.appleWallet });
+
+        // DEX config
+        this.matchingEngine = await accounts[9];
+        this.DEX = await DEX.new('0x4625382e88790b76E5bAD2e9c8E724211cDDd011', { from: this.matchingEngine });
     });
 
     describe('investors', function () {
@@ -86,6 +91,35 @@ contract('StockICO', async accounts => {
             investorStockBalance.toString().should.equal('3');
             ICOStockBalance.toString().should.equal((AAPL_INITIAL_SUPPLY - 3).toString());
         });
-    });
 
+        it('can deposit tokens to the DEX smart contract.', async function () {
+            // Insverstor buys USDX
+            await this.crowdsale.sendTransaction({ from: this.investor1, value: USDXToWei(2000)});
+
+            // Investor buys AAPL shares with USDX
+            await this.stockICO.buyStock(600, { from: this.investor1 });
+
+            let investorUSDXBalance = await this.fiat.balanceOf(this.investor1);
+            let investorAAPLBalance = await this.stock.balanceOf(this.investor1);
+            let dexUSDXBalance = await this.fiat.balanceOf(this.DEX.address);
+            let dexAAPLBalance = await this.stock.balanceOf(this.DEX.address);
+            console.log("INV USDX: " + investorUSDXBalance.toString());
+            console.log("DEX USDX: " + dexUSDXBalance.toString());
+            console.log("INV AAPL: " + investorAAPLBalance.toString());
+            console.log("DEX AAPL: " + dexAAPLBalance.toString());
+
+            // Investor deposit USDX to DEX smart contract.
+            await this.DEX.deposit(this.fiat.address, USDXToWei(1000), { from: this.investor1 });
+            await this.DEX.deposit(this.stock.address, 2, { from: this.investor1 });
+
+            investorUSDXBalance = await this.fiat.balanceOf(this.investor1);
+            investorAAPLBalance = await this.stock.balanceOf(this.investor1);
+            dexUSDXBalance = await this.fiat.balanceOf(this.DEX.address);
+            dexAAPLBalance = await this.stock.balanceOf(this.DEX.address);
+            console.log("INV USDX: " + investorUSDXBalance.toString());
+            console.log("DEX USDX: " + dexUSDXBalance.toString());
+            console.log("INV AAPL: " + investorAAPLBalance.toString());
+            console.log("DEX AAPL: " + dexAAPLBalance.toString());
+        });
+    });
 });
