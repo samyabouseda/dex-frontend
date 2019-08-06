@@ -28,6 +28,7 @@ class App extends Component {
             { name: "Ethereum", symbol: "ETH", balanceOf: 0 },
             { name: "US Dollar X", symbol: "USDX", balanceOf: 0 },
             { name: "Apple Inc.", symbol: "AAPL", balanceOf: 0 },
+            { name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0 },
         ],
 
         // Trade
@@ -56,8 +57,11 @@ class App extends Component {
     };
 
     initContracts = async web3 => {
+        // Fiat
         const fiat = await this.initContract(Fiat, web3);
         const crowdsale = await this.initContract(FiatCrowdsale, web3);
+
+        // Stock
         const stock = await this.initContract(Stock, web3);
         const stockCrowdalse = await this.initContract(StockICO, web3);
         return {

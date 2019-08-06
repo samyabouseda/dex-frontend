@@ -56,4 +56,8 @@ contract StockICO {
     function _getStockAmount(uint256 _fiatAmount) internal view returns (uint256) {
         return _fiatAmount.div(pricePerShare);
     }
+
+    function getTotalSupply() internal view returns (uint256) {
+        return IERC20(stockToken).totalSupply();
+    }
 }

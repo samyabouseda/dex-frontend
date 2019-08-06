@@ -10,8 +10,9 @@ contract FiatCrowdsale is Crowdsale, MintedCrowdsale {
         address payable _wallet,
         ERC20 _token
     )
-    Crowdsale(_rate, _wallet, _token)
-    public {
+        Crowdsale(_rate, _wallet, _token)
+        public
+    {
 
     }
 }
