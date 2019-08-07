@@ -61,17 +61,18 @@ contract DEX {
         bytes memory signature
     ) public {
         Trade memory trade = Trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce);
+//        require(msg.sender = _matchingEngine);
         require(isValidSignature(trade, signature));
 
         // Token exchange
         IERC20 _tokenMaker = IERC20(tokenMaker);
-        IERC20 _tokenTaker = IERC20(tokenMaker);
+        IERC20 _tokenTaker = IERC20(tokenTaker);
 
-//        _tokenMaker.transfer(addressTaker, amountTaker);
-//        _tokens[tokenMaker][addressMaker] = _tokens[tokenMaker][addressMaker].sub(amountTaker);
-//        _tokens[tokenMaker][addressTaker] = _tokens[tokenMaker][addressTaker].add(amountTaker);
-//
-//        _tokenTaker.transfer(addressMaker, amountMaker);
+        _tokenMaker.transfer(addressTaker, amountMaker);
+        _tokens[tokenMaker][addressMaker] = _tokens[tokenMaker][addressMaker].sub(amountMaker);
+        _tokens[tokenMaker][addressTaker] = _tokens[tokenMaker][addressTaker].add(amountMaker);
+
+        _tokenTaker.transfer(addressMaker, amountTaker);
 //        _tokens[tokenTaker][addressTaker] = _tokens[tokenTaker][addressTaker].sub(amountMaker);
 //        _tokens[tokenTaker][addressMaker] = _tokens[tokenTaker][addressMaker].add(amountMaker);
 //
