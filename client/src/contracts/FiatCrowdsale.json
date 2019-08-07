@@ -700,12 +700,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x6FeC5E5dc0dc8196ded90bC759c37427D5C6CDeE",
-      "transactionHash": "0xdbc2a49f1f0a54053bcf131f66deb8fae86fa034cfa1e99b3e1b2d545214adb7"
+      "address": "0xb3a8959D41E07B04F1060BbF5760c0a926202240",
+      "transactionHash": "0x9d154904afa0dd633501097ff7c1ce46d39d19f85100996f33ab736f7dc5901c"
     }
   },
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-06T15:07:14.882Z",
+  "updatedAt": "2019-08-07T07:55:39.051Z",
   "devdoc": {
     "methods": {
       "buyTokens(address)": {

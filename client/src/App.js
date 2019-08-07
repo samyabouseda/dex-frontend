@@ -31,10 +31,12 @@ class App extends Component {
             { name: "Apple Inc.", symbol: "AAPL", balanceOf: 0 },
             { name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0 },
         ],
+        depositOnDex: 0,
 
         // Trade
         fiatToBuy: 0,
         stockToBuy: 0,
+        fiatDeposit: 0,
 
         // Contracts
         contracts: {},
@@ -112,11 +114,12 @@ class App extends Component {
         const ethBalance = await this.getEtherBalanceOf(account);
         const usdxBalance = await this.getUSDXBalanceOf(account);
         const aaplBalance = await this.getAAPLBalanceOf(account);
+        const usdxDepositOnDex = await this.getDepositOnDex(account);
         let listedAssets = this.state.listedAssets;
         listedAssets[0].balanceOf = ethBalance;
         listedAssets[1].balanceOf = usdxBalance;
         listedAssets[2].balanceOf = aaplBalance;
-        this.setState({ listedAssets });
+        this.setState({ listedAssets, depositOnDex: usdxDepositOnDex });
     };
 
     render() {
@@ -161,6 +164,7 @@ class App extends Component {
                 <p>Account address: {this.state.accountAddress}</p>
                 <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
                 <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
+                <p>Deposits: {this.state.depositOnDex}</p>
                 <button onClick={this.handleLoggout}>Logout</button>
             </header>
 
@@ -180,6 +184,7 @@ class App extends Component {
                 </div>
 
                 <div>
+                    <input type="text" name="fiatDeposit" placeholder="Amount in USDX" onChange={this.handleDepositInputChange}/>
                     <button onClick={this.deposit}>Deposit</button>
                 </div>
             </section>
@@ -233,6 +238,11 @@ class App extends Component {
     handleStockInputChange = (event) => {
         const text = event.target.value;
         this.setState({ stockToBuy: text });
+    };
+
+    handleDepositInputChange = (event) => {
+        const text = event.target.value;
+        this.setState({ fiatDeposit: text });
     };
 
     createAccount = async (event) => {
@@ -299,8 +309,15 @@ class App extends Component {
     getAAPLBalanceOf = async address => {
         const { contracts } = this.state;
         const balance = await contracts.stock.methods.balanceOf(address).call();
-        console.log(balance);
         return balance;
+    };
+
+    getDepositOnDex = async (address) => {
+        const { web3, contracts } = this.state;
+        // Should call a method of dex instead dex.methods.depositsOf(address);
+        // returns a list like [ [tokenAddress, amount] ]
+        const balance = await contracts.fiat.methods.balanceOf(contracts.dex.options.address).call();
+        return web3.utils.fromWei(balance);
     };
 
     getEther = async () => {
@@ -370,7 +387,7 @@ class App extends Component {
     };
 
     deposit = async () => {
-        const { contracts, session, web3 } = this.state;
+        const { contracts, session, web3, fiatDeposit } = this.state;
 
         // Routing setup.
         const from = {
@@ -396,15 +413,14 @@ class App extends Component {
                 },
             ]
         };
-        const params = [contracts.fiat.options.address, 10000000000000];
+        const deposit = fiatDeposit * 1000000000000000000;
+        const params = [contracts.fiat.options.address, deposit.toString()];
         const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
         const value = '';
 
         this.sendTransaction(from, to, value, data);
 
         this.updateBalancesOf(session.address);
-        let dexBalance = await contracts.fiat.methods.balanceOf(contracts.dex.options.address).call();
-        console.log(dexBalance);
     };
 
     placeOrder = async () => {
