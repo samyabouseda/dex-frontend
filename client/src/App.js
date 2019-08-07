@@ -7,6 +7,7 @@ import DEX from "./contracts/DEX";
 import getWeb3 from "./utils/getWeb3";
 import "./App.css";
 
+const abi = require('ethereumjs-abi');
 const Tx = require('ethereumjs-tx').Transaction;
 
 class App extends Component {
@@ -32,11 +33,13 @@ class App extends Component {
             { name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0 },
         ],
         depositOnDex: 0,
+        aaplDepositOnDex: 0,
 
         // Trade
         fiatToBuy: 0,
         stockToBuy: 0,
         fiatDeposit: 0,
+        aaplDeposit: 0,
 
         // Contracts
         contracts: {},
@@ -115,11 +118,12 @@ class App extends Component {
         const usdxBalance = await this.getUSDXBalanceOf(account);
         const aaplBalance = await this.getAAPLBalanceOf(account);
         const usdxDepositOnDex = await this.getDepositOnDex(account);
+        const aaplDepositOnDex = await this.getAAPLDepositOnDex();
         let listedAssets = this.state.listedAssets;
         listedAssets[0].balanceOf = ethBalance;
         listedAssets[1].balanceOf = usdxBalance;
         listedAssets[2].balanceOf = aaplBalance;
-        this.setState({ listedAssets, depositOnDex: usdxDepositOnDex });
+        this.setState({ listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex });
     };
 
     render() {
@@ -164,7 +168,8 @@ class App extends Component {
                 <p>Account address: {this.state.accountAddress}</p>
                 <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
                 <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
-                <p>Deposits: {this.state.depositOnDex}</p>
+                <p>Deposit USDX: {this.state.depositOnDex}</p>
+                <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
                 <button onClick={this.handleLoggout}>Logout</button>
             </header>
 
@@ -185,7 +190,16 @@ class App extends Component {
 
                 <div>
                     <input type="text" name="fiatDeposit" placeholder="Amount in USDX" onChange={this.handleDepositInputChange}/>
-                    <button onClick={this.deposit}>Deposit</button>
+                    <button onClick={this.deposit}>Deposit USDX</button>
+                </div>
+
+                <div>
+                    <input type="text" name="aaplDeposit" placeholder="Amount in shares" onChange={this.handleAAPLDepositInputChange}/>
+                    <button onClick={this.depositAAPL}>Deposit AAPL</button>
+                </div>
+
+                <div>
+                    <button onClick={this.tradeInterface}>Trade</button>
                 </div>
             </section>
             <div>
@@ -243,6 +257,11 @@ class App extends Component {
     handleDepositInputChange = (event) => {
         const text = event.target.value;
         this.setState({ fiatDeposit: text });
+    };
+
+    handleAAPLDepositInputChange = (event) => {
+        const text = event.target.value;
+        this.setState({ aaplDeposit: text });
     };
 
     createAccount = async (event) => {
@@ -320,6 +339,16 @@ class App extends Component {
         return web3.utils.fromWei(balance);
     };
 
+    getAAPLDepositOnDex = async () => {
+        const { web3, contracts } = this.state;
+        // Should call a method of dex instead dex.methods.depositsOf(address);
+        // returns a list like [ [tokenAddress, amount] ]
+        // TODO: contracts.dex.option.balanceOf(session.address).call();
+        // this method should return the balance of the address received in params.
+        // NOT the total of token owned.
+        return await contracts.stock.methods.balanceOf(contracts.dex.options.address).call();
+    };
+
     getEther = async () => {
         const { accounts, session, web3 } = this.state;
 
@@ -379,6 +408,43 @@ class App extends Component {
         };
         const parameters = [this.state.stockToBuy];
         const data = web3.eth.abi.encodeFunctionCall(jsonInterface, parameters);
+        const value = '';
+
+        this.sendTransaction(from, to, value, data);
+
+        this.updateBalancesOf(session.address);
+    };
+
+    depositAAPL = async () => {
+        const { contracts, session, web3, aaplDeposit } = this.state;
+
+        // Routing setup.
+        const from = {
+            address: session.address,
+            privateKey: session.pk.substr(2),
+        };
+        const to = contracts.dex.options.address;
+
+        // Build deposit object.
+        // const jsonInterface = this.getJsonInterfaceFor(contract, functionName);
+        // const deposit = this.getEncodedFunctionCall(jsonInterface, params); params is array
+        const jsonInterface = {
+            name: 'deposit',
+            type: 'function',
+            inputs: [
+                {
+                    type: 'address',
+                    name: 'token'
+                },
+                {
+                    type: 'uint256',
+                    name: 'amount'
+                },
+            ]
+        };
+        const deposit = aaplDeposit;
+        const params = [contracts.stock.options.address, deposit.toString()];
+        const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
         const value = '';
 
         this.sendTransaction(from, to, value, data);
@@ -480,6 +546,51 @@ class App extends Component {
             if (err) console.log(err);
             else console.log('txHash: ', txHash);
         });
+    };
+
+    tradeInterface = async () => {
+        const { session, contracts } = this.state;
+        const tokenMaker = contracts.stock.options.address;
+        const tokenTaker = contracts.fiat.options.address;
+        const amountMaker = 1;
+        const amountTaker = 210;
+        const addressMaker = session.address;
+        const addressTaker = '0x8C2A73543FB05cEa0148f2A98782EBE0FaE3286c';
+        const nonce = '0x7f';
+        // const contractAddress = contracts.dex.options.address; // used to prevent replay attacks.
+
+        // Construct message.
+        let msg =  abi.soliditySHA3(
+            ["address", "address", "uint256", "uint256", "address", "address", "uint256"],
+            [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce]
+        );
+        console.log(msg);
+
+        // Sign msg.
+        const MATCHING_ENGINE_PK = '0xc1cbe2100aed68260d5b8219d3a9e0441827ed52f047163b30c36348f00b8362';
+        let signatureObject = await this.signMessage(msg, MATCHING_ENGINE_PK);
+        console.log(signatureObject);
+
+        // Recover.
+        let signature = signatureObject["signature"];
+        let messageHash = signatureObject.messageHash;
+        console.log(signature);
+        console.log(messageHash);
+
+        // let signer = await web3.eth.accounts.recover(messageHash, signature, true);
+        // console.log(signer);
+
+        // Send msg to DEX.
+
+        await contracts.dex.methods.trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce, signature).call();
+    };
+
+    signMessage = async (message, privateKey) => {
+        const { web3 } = this.state;
+        return await web3.eth.accounts.sign(
+            "0x" + message.toString("hex"),
+            privateKey
+        );
     };
 
 }

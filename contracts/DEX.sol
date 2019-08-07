@@ -67,23 +67,23 @@ contract DEX {
         IERC20 _tokenMaker = IERC20(tokenMaker);
         IERC20 _tokenTaker = IERC20(tokenMaker);
 
-        _tokenMaker.transfer(addressTaker, amountTaker);
-        _tokens[tokenMaker][addressMaker] = _tokens[tokenMaker][addressMaker].sub(amountTaker);
-        _tokens[tokenMaker][addressTaker] = _tokens[tokenMaker][addressTaker].add(amountTaker);
-
-        _tokenTaker.transfer(addressMaker, amountMaker);
-        _tokens[tokenTaker][addressTaker] = _tokens[tokenTaker][addressTaker].sub(amountMaker);
-        _tokens[tokenTaker][addressMaker] = _tokens[tokenTaker][addressMaker].add(amountMaker);
-
-        emit OrderFilled(
-            trade.tokenMaker,
-            trade.tokenTaker,
-            trade.amountMaker,
-            trade.amountTaker,
-            trade.addressMaker,
-            trade.addressTaker,
-            trade.nonce
-        );
+//        _tokenMaker.transfer(addressTaker, amountTaker);
+//        _tokens[tokenMaker][addressMaker] = _tokens[tokenMaker][addressMaker].sub(amountTaker);
+//        _tokens[tokenMaker][addressTaker] = _tokens[tokenMaker][addressTaker].add(amountTaker);
+//
+//        _tokenTaker.transfer(addressMaker, amountMaker);
+//        _tokens[tokenTaker][addressTaker] = _tokens[tokenTaker][addressTaker].sub(amountMaker);
+//        _tokens[tokenTaker][addressMaker] = _tokens[tokenTaker][addressMaker].add(amountMaker);
+//
+//        emit OrderFilled(
+//            trade.tokenMaker,
+//            trade.tokenTaker,
+//            trade.amountMaker,
+//            trade.amountTaker,
+//            trade.addressMaker,
+//            trade.addressTaker,
+//            trade.nonce
+//        );
     }
 
     function isValidSignature(Trade memory trade, bytes memory signature)
