@@ -199,7 +199,7 @@ class App extends Component {
                 </div>
 
                 <div>
-                    <button onClick={this.tradeInterface}>Trade</button>
+                    <button onClick={this.trade}>Trade</button>
                 </div>
             </section>
             <div>
@@ -358,7 +358,7 @@ class App extends Component {
             privateKey: '0x17437df3163604090b5254f80bbffeb654b76221fdeef525a2e79fc27060d0a8'.substr(2),
         };
         const to = session.address;
-        const value = web3.utils.toHex(web3.utils.toWei('0.5', 'ether'));
+        const value = web3.utils.toHex(web3.utils.toWei('10', 'ether'));
         const data = '';
 
         await this.sendTransaction(suggar, to, value, data, true);
@@ -548,15 +548,22 @@ class App extends Component {
         });
     };
 
-    tradeInterface = async () => {
-        const { session, contracts } = this.state;
+    trade = async () => {
+        const { session, contracts, web3 } = this.state;
+        const USDXToWei = n => {
+            // CORRECT CONVERSION
+            const USDX_RATE = 200; // rate should be dynamic.
+            let nInUSDX = (n / USDX_RATE * 200).toString();
+            return web3.utils.toWei(nInUSDX.toString(), 'ether');
+        };
+        const txCount = await web3.eth.getTransactionCount(session.address);
         const tokenMaker = contracts.stock.options.address;
         const tokenTaker = contracts.fiat.options.address;
-        const amountMaker = 1;
-        const amountTaker = 210;
+        const amountMaker = '1';
+        const amountTaker = USDXToWei(210);
         const addressMaker = session.address;
         const addressTaker = '0x8C2A73543FB05cEa0148f2A98782EBE0FaE3286c';
-        const nonce = '0x7f';
+        const nonce = web3.utils.toHex(txCount);
         // const contractAddress = contracts.dex.options.address; // used to prevent replay attacks.
 
         // Construct message.
@@ -564,25 +571,82 @@ class App extends Component {
             ["address", "address", "uint256", "uint256", "address", "address", "uint256"],
             [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce]
         );
-        console.log(msg);
 
         // Sign msg.
         const MATCHING_ENGINE_PK = '0xc1cbe2100aed68260d5b8219d3a9e0441827ed52f047163b30c36348f00b8362';
         let signatureObject = await this.signMessage(msg, MATCHING_ENGINE_PK);
+        let signature = signatureObject.signature;
         console.log(signatureObject);
 
-        // Recover.
-        let signature = signatureObject["signature"];
-        let messageHash = signatureObject.messageHash;
-        console.log(signature);
-        console.log(messageHash);
+        // // Recover.
+        // let signature = signatureObject["signature"];
+        // let messageHash = signatureObject.messageHash;
+        // console.log(signature);
+        // console.log(messageHash);
 
         // let signer = await web3.eth.accounts.recover(messageHash, signature, true);
         // console.log(signer);
+        let bofdex = await this.getAAPLBalanceOf(contracts.dex.options.address);
+        let bofinv = await this.getAAPLBalanceOf(session.address);
+        console.log("Balance stock dex: " + bofdex.toString());
+        console.log("Balance stock inv: " + bofinv.toString());
 
         // Send msg to DEX.
+        const from = {
+            address: session.address,
+            privateKey: session.pk.substr(2)
+        };
+        const to = contracts.dex.options.address;
+        const value = '';
+        const jsonInterface = {
+            name: 'trade',
+            type: 'function',
+            inputs: [
+                {
+                    type: 'address',
+                    name: 'tokenMaker'
+                },
+                {
+                    type: 'address',
+                    name: 'tokenTaker'
+                },
+                {
+                    type: 'uint256',
+                    name: 'amountMaker'
+                },
+                {
+                    type: 'uint256',
+                    name: 'amountTaker'
+                },
+                {
+                    type: 'address',
+                    name: 'addressMaker'
+                },
+                {
+                    type: 'address',
+                    name: 'addressTaker'
+                },
+                {
+                    type: 'uint256',
+                    name: 'nonce'
+                },
+                {
+                    type: 'bytes',
+                    name: 'signature'
+                },
+            ]
+        };
+        const params = [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce, signature];
+        const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
 
-        await contracts.dex.methods.trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce, signature).call();
+        this.sendTransaction(from, to, value, data);
+
+        bofdex = await this.getAAPLBalanceOf(contracts.dex.options.address);
+        bofinv = await this.getAAPLBalanceOf(session.address);
+        console.log("Balance stock dex: " + bofdex.toString());
+        console.log("Balance stock inv: " + bofinv.toString());
+
+        this.updateBalancesOf(session.address);
     };
 
     signMessage = async (message, privateKey) => {

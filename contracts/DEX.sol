@@ -76,15 +76,15 @@ contract DEX {
 //        _tokens[tokenTaker][addressTaker] = _tokens[tokenTaker][addressTaker].sub(amountMaker);
 //        _tokens[tokenTaker][addressMaker] = _tokens[tokenTaker][addressMaker].add(amountMaker);
 //
-//        emit OrderFilled(
-//            trade.tokenMaker,
-//            trade.tokenTaker,
-//            trade.amountMaker,
-//            trade.amountTaker,
-//            trade.addressMaker,
-//            trade.addressTaker,
-//            trade.nonce
-//        );
+        emit OrderFilled(
+            trade.tokenMaker,
+            trade.tokenTaker,
+            trade.amountMaker,
+            trade.amountTaker,
+            trade.addressMaker,
+            trade.addressTaker,
+            trade.nonce
+        );
     }
 
     function isValidSignature(Trade memory trade, bytes memory signature)
