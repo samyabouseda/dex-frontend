@@ -7,6 +7,8 @@ import DEX from "./contracts/DEX";
 import getWeb3 from "./utils/getWeb3";
 import "./App.css";
 
+import axios from "axios";
+
 const abi = require('ethereumjs-abi');
 const Tx = require('ethereumjs-tx').Transaction;
 
@@ -199,7 +201,7 @@ class App extends Component {
                 </div>
 
                 <div>
-                    <button onClick={this.trade}>Trade</button>
+                    <button onClick={this.placeOrder}>Place order</button>
                 </div>
             </section>
             <div>
@@ -490,9 +492,61 @@ class App extends Component {
     };
 
     placeOrder = async () => {
-        // Build order object
-        // Sing order object
-        // sender order objet and signature to Order Book
+        const { session, contracts, web3 } = this.state;
+
+        // Helper
+        const USDXToWei = n => {
+            // CORRECT CONVERSION
+            const USDX_RATE = 200; // rate should be dynamic.
+            let nInUSDX = (n / USDX_RATE * 200).toString();
+            return web3.utils.toWei(nInUSDX.toString(), 'ether');
+        };
+
+        // Order data.
+        const txCount = await web3.eth.getTransactionCount(session.address);
+        const tokenMaker = contracts.stock.options.address;
+        const tokenTaker = contracts.fiat.options.address;
+        const amountMaker = '1';
+        const amountTaker = USDXToWei(210);
+        const addressMaker = session.address;
+        const nonce = web3.utils.toHex(txCount);
+
+        let messageData = {
+            tokenMaker: tokenMaker,
+            tokenTaker: tokenTaker,
+            amountMaker: amountMaker,
+            amountTaker: amountTaker,
+            addressMaker: addressMaker,
+            nonce: nonce,
+        };
+
+        // Build message.
+        let message =  abi.soliditySHA3(
+            ["address", "address", "uint256", "uint256", "address", "uint256"],
+            [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, nonce]
+        );
+
+        // Sign message.
+        let signatureObject = await this.signMessage(message, session.pk);
+        // let signature = signatureObject.signature;
+        console.log(signatureObject);
+
+        // Recover.
+        let signer = await web3.eth.accounts.recover(signatureObject.messageHash, signatureObject.signature, true);
+        console.log(JSON.stringify(signer));
+        console.log(JSON.stringify(signatureObject));
+
+        // Sender order and signature to Order Book
+        // axios.post(backendUrl)
+        const signature = signatureObject.signature;
+        const params = JSON.stringify({
+            messageData: messageData,
+            messageHash: signatureObject.messageHash,
+            signature: signature
+        });
+        console.log(session.pk);
+        const res = await axios.post('http://127.0.0.1:8000/orders', params);
+        console.log(res.status);
     };
 
     sendTransaction = async (from, to, value, data) => {
