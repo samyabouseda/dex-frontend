@@ -9,5 +9,5 @@ module.exports = async function(deployer, network, accounts) {
         dexOwner = await accounts[8];
     }
 
-    await deployer.deploy(DEX, '0x4625382e88790b76E5bAD2e9c8E724211cDDd011');
+    await deployer.deploy(DEX, '0x8FC9b674Aa37B879F6E9B096C8dB63f92d63A446');
 };

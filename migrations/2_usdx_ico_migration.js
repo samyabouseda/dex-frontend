@@ -64,24 +64,24 @@ module.exports = async function(deployer, network, accounts) {
 
     // MSFT TOKEN
 
-    // Stock config
-    const msft = await deployer.deploy(
-        Stock,
-        "Microsoft Corporation",
-        "MSFT",
-        MSFT_INITIAL_SUPPLY,
-        { from: msftWallet }
-    );
-
-    // StockICO config
-    const msftPricePerShare = 100;
-    const msftICO = await deployer.deploy(
-        StockICO,
-        msft.address,
-        fiat.address,
-        msftPricePerShare,
-        { from: msftWallet }
-    );
-    await msft.transfer(msftICO.address, MSFT_INITIAL_SUPPLY, { from: msftWallet });
-    await msft.transferOwnership(msftICO.address, { from: msftWallet });
+    // // Stock config
+    // const msft = await deployer.deploy(
+    //     Stock,
+    //     "Microsoft Corporation",
+    //     "MSFT",
+    //     MSFT_INITIAL_SUPPLY,
+    //     { from: msftWallet }
+    // );
+    //
+    // // StockICO config
+    // const msftPricePerShare = 100;
+    // const msftICO = await deployer.deploy(
+    //     StockICO,
+    //     msft.address,
+    //     fiat.address,
+    //     msftPricePerShare,
+    //     { from: msftWallet }
+    // );
+    // await msft.transfer(msftICO.address, MSFT_INITIAL_SUPPLY, { from: msftWallet });
+    // await msft.transferOwnership(msftICO.address, { from: msftWallet });
 };

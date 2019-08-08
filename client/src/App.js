@@ -81,6 +81,15 @@ class App extends Component {
             { ask: 96.05, size: 0, total: 0 },
             { ask: 92.02, size: 0, total: 0 },
         ],
+        orderEntry: {
+            orderType: 'Limit',
+            tokenMaker: null, // BUY : tokenMaker = USDX, tokenTaker = STOCK     STOCK is the current selected stock
+            tokenTaker: null, // SELL: tokenMaker = STOCK, tokenTaker = USDX     USDX is fiat token.
+            shares: 0,
+            price: 0,
+            totalPrice: 0,
+            side: 'BUY',
+        }
     };
 
     componentDidMount = async () => {
@@ -290,30 +299,48 @@ class App extends Component {
     };
 
     renderOrderEntry = () => {
+        const { orderEntry } = this.state;
         return (
             <section>
                 <p>Order entry</p>
                 <div>
-                    <button>Buy</button>
-                    <button>Sell</button>
+                    <button name="side" value="BUY" onClick={this.handleOrderEntryChange}>Buy</button>
+                    <button name="side" value="SELL" onClick={this.handleOrderEntryChange}>Sell</button>
                 </div>
                 <p>Stock</p>
                 <p>Order type</p>
-                <select>
-                    <option>Limit</option>
-                    <option>Market</option>
+                <select name="orderType" onChange={this.handleOrderEntryChange}>
+                    <option name="orderTypeOption" value="Limit">Limit</option>
+                    <option name="orderTypeOption" value="Market">Market</option>
                 </select>
-                <p>Ask price</p>
-                <p>891.75</p>
+                <p>[Ask price]</p>
+                <p>[891.75]</p>
                 <p>Shares</p>
-                <input name="shares" placeholder="Number of shares"/>
+                <input name="shares" placeholder="Number of shares" onChange={this.handleOrderEntryChange}/>
                 <p>Price</p>
-                <input name="price-per-share" placeholder="USDX"/>
+                <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange}/>
                 <p>Estimated cost</p>
-                <p>889.50</p>
+                <p>{orderEntry.totalPrice}</p>
+                <button onClick={this.placeOrder}>{orderEntry.side === 'BUY' ? 'Buy' : 'Sell'}</button>
             </section>
         );
     };
+
+    handleOrderEntryChange= (event) => {
+        const { orderEntry } = this.state;
+        const name = event.target.name;
+        const value = event.target.value;
+        orderEntry[name] = value;
+        orderEntry.totalPrice = this.calcEstimatedCost();
+        console.log(orderEntry);
+        this.setState({ orderEntry });
+    };
+
+    calcEstimatedCost = () => {
+        const { orderEntry } = this.state;
+        return orderEntry.shares * orderEntry.price;
+    };
+
 
     renderOrderHistory = () => {
         const { orderList } = this.state;
@@ -745,32 +772,31 @@ class App extends Component {
     };
 
     placeOrder = async () => {
-        const { session, contracts, web3 } = this.state;
+        const { session, contracts, web3, orderEntry } = this.state;
 
-        // Helper
-        const USDXToWei = n => {
-            // CORRECT CONVERSION
-            const USDX_RATE = 200; // rate should be dynamic.
-            let nInUSDX = (n / USDX_RATE * 200).toString();
-            return web3.utils.toWei(nInUSDX.toString(), 'ether');
-        };
+        // NEW
+
+        // Helpers.
+        const USDXToWei = n => web3.utils.toWei(n.toString(), 'ether');
 
         // Order data.
-        const txCount = await web3.eth.getTransactionCount(session.address);
-        const tokenMaker = contracts.stock.options.address;
-        const tokenTaker = contracts.fiat.options.address;
-        const amountMaker = this.state.amountMaker.toString();
-        const amountTaker = USDXToWei(this.state.amountTaker);
-        const addressMaker = session.address;
-        const nonce = web3.utils.toHex(txCount);
+        let txCount, tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, nonce;
+        txCount = await web3.eth.getTransactionCount(session.address); // change to have tx of DEX
+        tokenMaker = orderEntry.side === 'BUY' ? contracts.fiat.options.address : contracts.stock.options.address;
+        tokenTaker = orderEntry.side === 'BUY' ? contracts.stock.options.address : contracts.fiat.options.address;
+        amountMaker = orderEntry.side === 'BUY' ? USDXToWei(orderEntry.totalPrice) : orderEntry.shares;
+        amountTaker = orderEntry.side === 'BUY' ? orderEntry.shares : USDXToWei(orderEntry.totalPrice);
+        addressMaker = session.address;
+        nonce = web3.utils.toHex(txCount);
 
-        let messageData = {
+        let orderData = {
             tokenMaker: tokenMaker,
             tokenTaker: tokenTaker,
             amountMaker: amountMaker,
             amountTaker: amountTaker,
             addressMaker: addressMaker,
             nonce: nonce,
+            side: orderEntry.side,
         };
 
         // Build message.
@@ -783,15 +809,20 @@ class App extends Component {
         let signatureObject = await this.signMessage(message, session.pk);
 
         // Sender order and signature to Order Book
-        const signature = signatureObject.signature;
         const params = JSON.stringify({
-            messageData: messageData,
+            orderData: orderData,
             messageHash: signatureObject.messageHash,
-            signature: signature
+            signature: signatureObject.signature
         });
         const res = await axios.post('http://127.0.0.1:8000/orders', params);
-        console.log(messageData);
+
         console.log(res.status);
+        console.log(orderData);
+
+        const balanceF = await contracts.fiat.methods.balanceOf(session.address).call();
+        const balanceS = await contracts.fiat.methods.balanceOf(session.address).call();
+        console.log("balance stock" + balanceF);
+        console.log("balance fiat" + balanceS);
     };
 
     sendTransaction = async (from, to, value, data) => {
