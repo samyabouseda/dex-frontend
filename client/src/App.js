@@ -43,9 +43,44 @@ class App extends Component {
         fiatDeposit: 0,
         aaplDeposit: 0,
 
+        // Place Order.
+        amountMaker: 0,
+        amountTaker: 0,
+
         // Contracts
         contracts: {},
 
+
+        // New UI
+        stockList: [
+            { symbol: "AAPL", name: "Apple Inc.", price: 199.04, bid: 0, ask: 0 },
+            { symbol: "MSFT", name: "Microsoft Corporation", price: 135.28, bid: 0, ask: 0 },
+            { symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0 },
+            { symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0 },
+        ],
+        orderList: [
+            { symbol: "AAPL", name: "Apple Inc.", status: "FILLED", time: "15.03.45", side: "SELL", qty: "20", price: 200.00 },
+            { symbol: "AAPL", name: "Apple Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
+            { symbol: "AAPL", name: "Apple Inc.", status: "CANCELLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
+            { symbol: "MSFT", name: "Microsoft Corporation", status: "FILLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
+            { symbol: "TSLA", name: "Tesla Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
+            { symbol: "INTC", name: "Inter Corporation", status: "FILLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
+            { symbol: "TSLA", name: "Tesla Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
+        ],
+        bidList: [
+            { bid: 99.02, size: 0, total: 0 },
+            { bid: 102.32, size: 0, total: 0 },
+            { bid: 100.45, size: 0, total: 0 },
+            { bid: 110.54, size: 0, total: 0 },
+            { bid: 115.00, size: 0, total: 0 },
+        ],
+        askList: [
+            { ask: 98.04, size: 0, total: 0 },
+            { ask: 97.05, size: 0, total: 0 },
+            { ask: 97.55, size: 0, total: 0 },
+            { ask: 96.05, size: 0, total: 0 },
+            { ask: 92.02, size: 0, total: 0 },
+        ],
     };
 
     componentDidMount = async () => {
@@ -141,8 +176,8 @@ class App extends Component {
         );
     }
 
-    renderUIforLoggedOutUser = () =>
-        <div>
+    renderUIforLoggedOutUser = () => {
+        return (<div>
             <h2>Account creation</h2>
             <form onSubmit={this.createAccount}>
                 <p>{this.state.accountNameError}</p>
@@ -161,49 +196,78 @@ class App extends Component {
                        onChange={this.handleAccountFormChange}/>
                 <button type="submit" name="loginButton">Login</button>
             </form>
-        </div>;
+        </div>);
+    };
 
-    renderUIforLoggedUser = () =>
-        <div>
-            <header>
-                <p>Account name: {this.state.accountName}</p>
-                <p>Account address: {this.state.accountAddress}</p>
-                <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
-                <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
-                <p>Deposit USDX: {this.state.depositOnDex}</p>
-                <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
-                <button onClick={this.handleLoggout}>Logout</button>
-            </header>
 
+    renderUIforLoggedUser = () => {
+        return (
+            <div>
+                <header>
+                    <p>Account name: {this.state.accountName}</p>
+                    <p>Account address: {this.state.accountAddress}</p>
+                    <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
+                    <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
+                    <p>Deposit USDX: {this.state.depositOnDex}</p>
+                    <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
+                    <button onClick={this.handleLoggout}>Logout</button>
+                </header>
+
+                <section>
+                    <div>
+                        <button onClick={this.getEther}>Get Ether</button>
+                    </div>
+
+                    <div>
+                        <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
+                        <button onClick={this.buyFiat}>Buy fiat</button>
+                    </div>
+
+                    <div>
+                        <input type="text" name="stockToBuy" placeholder="Amount in USDX" onChange={this.handleStockInputChange}/>
+                        <button onClick={this.buyStock}>Buy stock</button>
+                    </div>
+
+                    <div>
+                        <input type="text" name="fiatDeposit" placeholder="Amount in USDX" onChange={this.handleDepositInputChange}/>
+                        <button onClick={this.deposit}>Deposit USDX</button>
+                    </div>
+
+                    <div>
+                        <input type="text" name="aaplDeposit" placeholder="Amount in shares" onChange={this.handleAAPLDepositInputChange}/>
+                        <button onClick={this.depositAAPL}>Deposit AAPL</button>
+                    </div>
+
+                    <div>
+                        {/*<input type="text" name="tokenMaker" placeholder="token" onChange={this.handleAAPLDepositInputChange}/>*/}
+                        <p>Amount maker</p>
+                        <input type="text" name="amountMaker" placeholder="amount in shares" onChange={this.handleOrderAmountChange}/>
+
+                        <p>Amount taker</p>
+                        <input type="text" name="amountTaker" placeholder="amount in USDX" onChange={this.handleOrderAmountChange}/>
+                        <button onClick={this.placeOrder}>Place order</button>
+                    </div>
+                </section>
+
+                {this.renderTradingUI()}
+            </div>
+        );
+    };
+
+    renderTradingUI = () => {
+        return (
             <section>
-                <div>
-                    <button onClick={this.getEther}>Get Ether</button>
-                </div>
-
-                <div>
-                    <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
-                    <button onClick={this.buyFiat}>Buy fiat</button>
-                </div>
-
-                <div>
-                    <input type="text" name="stockToBuy" placeholder="Amount in USDX" onChange={this.handleStockInputChange}/>
-                    <button onClick={this.buyStock}>Buy stock</button>
-                </div>
-
-                <div>
-                    <input type="text" name="fiatDeposit" placeholder="Amount in USDX" onChange={this.handleDepositInputChange}/>
-                    <button onClick={this.deposit}>Deposit USDX</button>
-                </div>
-
-                <div>
-                    <input type="text" name="aaplDeposit" placeholder="Amount in shares" onChange={this.handleAAPLDepositInputChange}/>
-                    <button onClick={this.depositAAPL}>Deposit AAPL</button>
-                </div>
-
-                <div>
-                    <button onClick={this.placeOrder}>Place order</button>
-                </div>
+                {this.renderHeader()}
+                {this.renderStockList()}
+                {this.renderOrderEntry()}
+                {this.renderOrderBook()}
+                {this.renderOrderHistory()}
             </section>
+        );
+    };
+
+    renderPortfolio = () => {
+        return (
             <div>
                 <h3>Porfolio assets</h3>
                 <div>
@@ -222,7 +286,190 @@ class App extends Component {
                     </table>
                 </div>
             </div>
-        </div>;
+        );
+    };
+
+    renderOrderEntry = () => {
+        return (
+            <section>
+                <p>Order entry</p>
+                <div>
+                    <button>Buy</button>
+                    <button>Sell</button>
+                </div>
+                <p>Stock</p>
+                <p>Order type</p>
+                <select>
+                    <option>Limit</option>
+                    <option>Market</option>
+                </select>
+                <p>Ask price</p>
+                <p>891.75</p>
+                <p>Shares</p>
+                <input name="shares" placeholder="Number of shares"/>
+                <p>Price</p>
+                <input name="price-per-share" placeholder="USDX"/>
+                <p>Estimated cost</p>
+                <p>889.50</p>
+            </section>
+        );
+    };
+
+    renderOrderHistory = () => {
+        const { orderList } = this.state;
+        return (
+            <section>
+                <h3>Order History</h3>
+                <table>
+                    <tbody>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Side</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                    </tr>
+                    </tbody>
+                    <tbody>
+                    {this.renderOrders(orderList)}
+                    </tbody>
+                </table>
+            </section>
+        );
+    };
+
+    renderOrders = (orders) => {
+        return orders.map((order, key) => {
+            return (
+                <tr key={key}>
+                    <td>{order.symbol}</td>
+                    <td>{order.name}</td>
+                    <td>{order.status}</td>
+                    <td>{order.time}</td>
+                    <td>{order.side}</td>
+                    <td>{order.qty}</td>
+                    <td>{order.price}</td>
+                </tr>
+            );
+        });
+    };
+
+    renderHeader = () => {
+        return (
+            <header>
+                <h1>Decentralized Stock Exchange</h1>
+            </header>
+        );
+    };
+
+    renderStockList = () => {
+        const { stockList } = this.state;
+        return (
+            <section>
+                <h3>Stock List</h3>
+                <table>
+                    <tbody>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Bid</th>
+                        <th>Ask</th>
+                    </tr>
+                    </tbody>
+                    <tbody>
+                    {this.renderStocks(stockList)}
+                    </tbody>
+                </table>
+            </section>
+        );
+    };
+
+    renderStocks = (stocks) => {
+        return stocks.map((stock, key) => {
+            return (
+                <tr key={key}>
+                    <td>{stock.symbol}</td>
+                    <td>{stock.name}</td>
+                    <td>{stock.price}</td>
+                    <td>{stock.bid}</td>
+                    <td>{stock.ask}</td>
+                </tr>
+            );
+        });
+    };
+
+    renderOrderBook = () => {
+        return (
+            <section>
+                <h3>Order Book AAPL/USDX</h3>
+                {this.renderBidTable()}
+                {this.renderAskTable()}
+            </section>
+        );
+    };
+
+    renderBidTable = () => {
+        const { bidList } = this.state;
+        return (
+            <table>
+                <tbody>
+                <tr>
+                    <th>Total</th>
+                    <th>Size</th>
+                    <th>Bid</th>
+                </tr>
+                </tbody>
+                <tbody>
+                {this.renderBids(bidList)}
+                </tbody>
+            </table>
+        );
+    };
+
+    renderBids = (bids) => {
+        return bids.map((bid, key) => {
+            return (
+                <tr key={key}>
+                    <td>{bid.total}</td>
+                    <td>{bid.size}</td>
+                    <td>{bid.bid}</td>
+                </tr>
+            );
+        });
+    };
+
+    renderAskTable = () => {
+        const { askList } = this.state;
+        return (
+            <table>
+                <tbody>
+                <tr>
+                    <th>Ask</th>
+                    <th>Size</th>
+                    <th>Total</th>
+                </tr>
+                </tbody>
+                <tbody>
+                {this.renderAsks(askList)}
+                </tbody>
+            </table>
+        );
+    };
+
+    renderAsks = (asks) => {
+        return asks.map((ask, key) => {
+            return (
+                <tr key={key}>
+                    <td>{ask.total}</td>
+                    <td>{ask.size}</td>
+                    <td>{ask.ask}</td>
+                </tr>
+            );
+        });
+    };
 
     renderAssets = assets => assets.map((asset, key) => this.renderAsset(asset, key));
 
@@ -264,6 +511,12 @@ class App extends Component {
     handleAAPLDepositInputChange = (event) => {
         const text = event.target.value;
         this.setState({ aaplDeposit: text });
+    };
+
+    handleOrderAmountChange = (event) => {
+        const text = event.target.value;
+        const name = event.target.name;
+        this.setState({ [name]: text });
     };
 
     createAccount = async (event) => {
@@ -506,8 +759,8 @@ class App extends Component {
         const txCount = await web3.eth.getTransactionCount(session.address);
         const tokenMaker = contracts.stock.options.address;
         const tokenTaker = contracts.fiat.options.address;
-        const amountMaker = '1';
-        const amountTaker = USDXToWei(210);
+        const amountMaker = this.state.amountMaker.toString();
+        const amountTaker = USDXToWei(this.state.amountTaker);
         const addressMaker = session.address;
         const nonce = web3.utils.toHex(txCount);
 
@@ -528,24 +781,16 @@ class App extends Component {
 
         // Sign message.
         let signatureObject = await this.signMessage(message, session.pk);
-        // let signature = signatureObject.signature;
-        console.log(signatureObject);
-
-        // Recover.
-        let signer = await web3.eth.accounts.recover(signatureObject.messageHash, signatureObject.signature, true);
-        console.log(JSON.stringify(signer));
-        console.log(JSON.stringify(signatureObject));
 
         // Sender order and signature to Order Book
-        // axios.post(backendUrl)
         const signature = signatureObject.signature;
         const params = JSON.stringify({
             messageData: messageData,
             messageHash: signatureObject.messageHash,
             signature: signature
         });
-        console.log(session.pk);
         const res = await axios.post('http://127.0.0.1:8000/orders', params);
+        console.log(messageData);
         console.log(res.status);
     };
 
@@ -632,14 +877,6 @@ class App extends Component {
         let signature = signatureObject.signature;
         console.log(signatureObject);
 
-        // // Recover.
-        // let signature = signatureObject["signature"];
-        // let messageHash = signatureObject.messageHash;
-        // console.log(signature);
-        // console.log(messageHash);
-
-        // let signer = await web3.eth.accounts.recover(messageHash, signature, true);
-        // console.log(signer);
         let bofdex = await this.getAAPLBalanceOf(contracts.dex.options.address);
         let bofinv = await this.getAAPLBalanceOf(session.address);
         console.log("Balance stock dex: " + bofdex.toString());
@@ -710,6 +947,10 @@ class App extends Component {
             privateKey
         );
     };
+
+    // let signature = signatureObject.signature;
+    // // Recover.
+    // let signer = await web3.eth.accounts.recover(signatureObject.messageHash, signatureObject.signature, true);
 
 }
 
