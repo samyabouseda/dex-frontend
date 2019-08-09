@@ -30,10 +30,10 @@ class App extends Component {
         // Assets
         listedAssets: [
             // TODO: Get the metadata dynamically.
-            { name: "Ethereum", symbol: "ETH", balanceOf: 0 },
-            { name: "US Dollar X", symbol: "USDX", balanceOf: 0 },
-            { name: "Apple Inc.", symbol: "AAPL", balanceOf: 0 },
-            { name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0 },
+            {name: "Ethereum", symbol: "ETH", balanceOf: 0},
+            {name: "US Dollar X", symbol: "USDX", balanceOf: 0},
+            {name: "Apple Inc.", symbol: "AAPL", balanceOf: 0},
+            // {name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0},
         ],
         depositOnDex: 0,
         aaplDepositOnDex: 0,
@@ -44,44 +44,98 @@ class App extends Component {
         fiatDeposit: 0,
         aaplDeposit: 0,
 
-        // Place Order.
-        amountMaker: 0,
-        amountTaker: 0,
-
         // Contracts
         contracts: {},
 
 
         // New UI
         stockList: [
-            { symbol: "AAPL", name: "Apple Inc.", price: 199.04, bid: 0, ask: 0 },
-            { symbol: "MSFT", name: "Microsoft Corporation", price: 135.28, bid: 0, ask: 0 },
-            { symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0 },
-            { symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0 },
+            {symbol: "AAPL", name: "Apple Inc.", price: 199.04, bid: 0, ask: 0},
+            {symbol: "MSFT", name: "Microsoft Corporation", price: 135.28, bid: 0, ask: 0},
+            {symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0},
+            {symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0},
         ],
         orderList: [
-            { symbol: "AAPL", name: "Apple Inc.", status: "FILLED", time: "15.03.45", side: "SELL", qty: "20", price: 200.00 },
-            { symbol: "AAPL", name: "Apple Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
-            { symbol: "AAPL", name: "Apple Inc.", status: "CANCELLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
-            { symbol: "MSFT", name: "Microsoft Corporation", status: "FILLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
-            { symbol: "TSLA", name: "Tesla Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
-            { symbol: "INTC", name: "Inter Corporation", status: "FILLED", time: "15.03.45", side: "SELL", qty: "45", price: 199.04 },
-            { symbol: "TSLA", name: "Tesla Inc.", status: "FILLED", time: "15.03.45", side: "BUY", qty: "45", price: 199.04 },
+            {
+                symbol: "AAPL",
+                name: "Apple Inc.",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "SELL",
+                qty: "20",
+                price: 200.00
+            },
+            {
+                symbol: "AAPL",
+                name: "Apple Inc.",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "BUY",
+                qty: "45",
+                price: 199.04
+            },
+            {
+                symbol: "AAPL",
+                name: "Apple Inc.",
+                status: "CANCELLED",
+                time: "15.03.45",
+                side: "SELL",
+                qty: "45",
+                price: 199.04
+            },
+            {
+                symbol: "MSFT",
+                name: "Microsoft Corporation",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "SELL",
+                qty: "45",
+                price: 199.04
+            },
+            {
+                symbol: "TSLA",
+                name: "Tesla Inc.",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "BUY",
+                qty: "45",
+                price: 199.04
+            },
+            {
+                symbol: "INTC",
+                name: "Inter Corporation",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "SELL",
+                qty: "45",
+                price: 199.04
+            },
+            {
+                symbol: "TSLA",
+                name: "Tesla Inc.",
+                status: "FILLED",
+                time: "15.03.45",
+                side: "BUY",
+                qty: "45",
+                price: 199.04
+            },
         ],
-        bidList: [
-            { bid: 99.02, size: 0, total: 0 },
-            { bid: 102.32, size: 0, total: 0 },
-            { bid: 100.45, size: 0, total: 0 },
-            { bid: 110.54, size: 0, total: 0 },
-            { bid: 115.00, size: 0, total: 0 },
-        ],
-        askList: [
-            { ask: 98.04, size: 0, total: 0 },
-            { ask: 97.05, size: 0, total: 0 },
-            { ask: 97.55, size: 0, total: 0 },
-            { ask: 96.05, size: 0, total: 0 },
-            { ask: 92.02, size: 0, total: 0 },
-        ],
+        // bidList: [
+        //     {bid: 99.02, size: 0, total: 0},
+        //     {bid: 102.32, size: 0, total: 0},
+        //     {bid: 100.45, size: 0, total: 0},
+        //     {bid: 110.54, size: 0, total: 0},
+        //     {bid: 115.00, size: 0, total: 0},
+        // ],
+        // askList: [
+        //     {ask: 98.04, size: 0, total: 0},
+        //     {ask: 97.05, size: 0, total: 0},
+        //     {ask: 97.55, size: 0, total: 0},
+        //     {ask: 96.05, size: 0, total: 0},
+        //     {ask: 92.02, size: 0, total: 0},
+        // ],
+        bids: [],
+        asks: [],
         orderEntry: {
             orderType: 'Limit',
             tokenMaker: null, // BUY : tokenMaker = USDX, tokenTaker = STOCK     STOCK is the current selected stock
@@ -94,13 +148,15 @@ class App extends Component {
     };
 
     componentDidMount = async () => {
+        this.interval = setInterval(() => this.loadBidAsk(), 1000);
         try {
             const web3 = await getWeb3();
             const accounts = await web3.eth.getAccounts();
             const contracts = await this.initContracts(web3);
             this.initEventWatching(contracts);
             this.initAccount(web3);
-            this.setState({ web3, accounts, contracts });
+            this.loadBidAsk();
+            this.setState({web3, accounts, contracts});
         } catch (error) {
             alert(
                 `Failed to load web3, accounts, or contract. Check console for details.`,
@@ -108,6 +164,10 @@ class App extends Component {
             console.error(error);
         }
     };
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
+    }
 
     initContracts = async web3 => {
         // Fiat
@@ -160,6 +220,12 @@ class App extends Component {
         }
     };
 
+    loadBidAsk = async () => {
+        let asks = await axios.get("http://127.0.0.1:8000/orders?side=ask");
+        let bids = await axios.get("http://127.0.0.1:8000/orders?side=bid");
+        this.setState({ bids: bids.data, asks: asks.data });
+    };
+
     updateBalancesOf = async (account) => {
         const ethBalance = await this.getEtherBalanceOf(account);
         const usdxBalance = await this.getUSDXBalanceOf(account);
@@ -170,16 +236,15 @@ class App extends Component {
         listedAssets[0].balanceOf = ethBalance;
         listedAssets[1].balanceOf = usdxBalance;
         listedAssets[2].balanceOf = aaplBalance;
-        this.setState({ listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex });
+        this.setState({listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex});
     };
 
     render() {
         if (!this.state.web3) {
-            return <div>Loading Web3, accounts, and contract...</div>;
+            return <h3>Loading Web3, accounts, and contract...</h3>;
         }
         return (
             <div className="App">
-                <h1>Decentralized Stock Exchange</h1>
                 {!this.state.isLogged && this.renderUIforLoggedOutUser()}
                 {this.state.isLogged && this.renderUIforLoggedUser()}
             </div>
@@ -187,75 +252,63 @@ class App extends Component {
     }
 
     renderUIforLoggedOutUser = () => {
-        return (<div>
-            <h2>Account creation</h2>
-            <form onSubmit={this.createAccount}>
-                <p>{this.state.accountNameError}</p>
-                <input type="text" name="accountName" placeholder="Account name"
-                       onChange={this.handleAccountFormChange}/>
-                <input type="password" name="accountPassword" placeholder="password"
-                       onChange={this.handleAccountFormChange}/>
-                <button type="submit" name="createAccountButton">Create account</button>
-            </form>
+        return (
+            <div>
+                {this.renderHeader()}
+                <h2>Account creation</h2>
+                <form onSubmit={this.createAccount}>
+                    <p>{this.state.accountNameError}</p>
+                    <input type="text" name="accountName" placeholder="Account name"
+                           onChange={this.handleAccountFormChange}/>
+                    <input type="password" name="accountPassword" placeholder="password"
+                           onChange={this.handleAccountFormChange}/>
+                    <button type="submit" name="createAccountButton">Create account</button>
+                </form>
 
-            <h2>Login</h2>
-            <form onSubmit={this.handleLogin}>
-                <input type="text" name="accountName" placeholder="Account name"
-                       onChange={this.handleAccountFormChange}/>
-                <input type="password" name="accountPassword" placeholder="password"
-                       onChange={this.handleAccountFormChange}/>
-                <button type="submit" name="loginButton">Login</button>
-            </form>
-        </div>);
+                <h2>Login</h2>
+                <form onSubmit={this.handleLogin}>
+                    <input type="text" name="accountName" placeholder="Account name"
+                           onChange={this.handleAccountFormChange}/>
+                    <input type="password" name="accountPassword" placeholder="password"
+                           onChange={this.handleAccountFormChange}/>
+                    <button type="submit" name="loginButton">Login</button>
+                </form>
+            </div>);
     };
 
 
     renderUIforLoggedUser = () => {
         return (
             <div>
-                <header>
-                    <p>Account name: {this.state.accountName}</p>
-                    <p>Account address: {this.state.accountAddress}</p>
-                    <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
-                    <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
-                    <p>Deposit USDX: {this.state.depositOnDex}</p>
-                    <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
-                    <button onClick={this.handleLoggout}>Logout</button>
-                </header>
-
+                {this.renderHeader()}
+                {this.renderAccountInfo()}
                 <section>
                     <div>
                         <button onClick={this.getEther}>Get Ether</button>
                     </div>
 
                     <div>
-                        <input type="text" name="fiatToBuy" placeholder="Amount in USDX" onChange={this.handleFiatInputChange} />
+                        <input type="text" name="fiatToBuy" placeholder="Amount in USDX"
+                               onChange={this.handleFiatInputChange}/>
                         <button onClick={this.buyFiat}>Buy fiat</button>
                     </div>
 
                     <div>
-                        <input type="text" name="stockToBuy" placeholder="Amount in USDX" onChange={this.handleStockInputChange}/>
+                        <input type="text" name="stockToBuy" placeholder="Amount in USDX"
+                               onChange={this.handleStockInputChange}/>
                         <button onClick={this.buyStock}>Buy stock</button>
                     </div>
 
                     <div>
-                        <input type="text" name="fiatDeposit" placeholder="Amount in USDX" onChange={this.handleDepositInputChange}/>
+                        <input type="text" name="fiatDeposit" placeholder="Amount in USDX"
+                               onChange={this.handleDepositInputChange}/>
                         <button onClick={this.deposit}>Deposit USDX</button>
                     </div>
 
                     <div>
-                        <input type="text" name="aaplDeposit" placeholder="Amount in shares" onChange={this.handleAAPLDepositInputChange}/>
+                        <input type="text" name="aaplDeposit" placeholder="Amount in shares"
+                               onChange={this.handleAAPLDepositInputChange}/>
                         <button onClick={this.depositAAPL}>Deposit AAPL</button>
-                    </div>
-
-                    <div>
-                        {/*<input type="text" name="tokenMaker" placeholder="token" onChange={this.handleAAPLDepositInputChange}/>*/}
-                        <p>Amount maker</p>
-                        <input type="text" name="amountMaker" placeholder="amount in shares" onChange={this.handleOrderAmountChange}/>
-
-                        <p>Amount taker</p>
-                        <input type="text" name="amountTaker" placeholder="amount in USDX" onChange={this.handleOrderAmountChange}/>
-                        <button onClick={this.placeOrder}>Place order</button>
                     </div>
                 </section>
 
@@ -267,26 +320,42 @@ class App extends Component {
     renderTradingUI = () => {
         return (
             <section>
-                {this.renderHeader()}
                 {this.renderStockList()}
                 {this.renderOrderEntry()}
                 {this.renderOrderBook()}
                 {this.renderOrderHistory()}
+                {this.renderPortfolio()}
             </section>
         );
     };
 
+    renderAccountInfo = () => {
+        return (
+            <header>
+                <p>Account name: {this.state.accountName}</p>
+                <p>Account address: {this.state.accountAddress}</p>
+                <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
+                <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
+                <p>Deposit USDX: {this.state.depositOnDex}</p>
+                <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
+                <button onClick={this.handleLoggout}>Logout</button>
+            </header>
+        );
+    };
+
+
     renderPortfolio = () => {
         return (
             <div>
-                <h3>Porfolio assets</h3>
+                <h3>Porfolio</h3>
                 <div>
-                    <h4>Fiat Token</h4>
                     <table>
                         <tbody>
                         <tr>
-                            <th>Asset</th>
                             <th>Symbol</th>
+                            <th>Name</th>
+                            <th>Qty</th>
+                            <th>Price</th>
                             <th>Total</th>
                         </tr>
                         </tbody>
@@ -299,8 +368,21 @@ class App extends Component {
         );
     };
 
+    renderAssets = assets => assets.map((asset, key) => this.renderAsset(asset, key));
+
+    renderAsset = (asset, key) => {
+        return (
+            <tr key={key}>
+                <td>{asset.name}</td>
+                <td>{asset.symbol}</td>
+                <td>{asset.balanceOf}</td>
+                {/*TODO: add price and total.*/}
+            </tr>
+        );
+    };
+
     renderOrderEntry = () => {
-        const { orderEntry } = this.state;
+        const {orderEntry} = this.state;
         return (
             <section>
                 <p>Order entry</p>
@@ -327,24 +409,24 @@ class App extends Component {
         );
     };
 
-    handleOrderEntryChange= (event) => {
-        const { orderEntry } = this.state;
+    handleOrderEntryChange = (event) => {
+        const {orderEntry} = this.state;
         const name = event.target.name;
         const value = event.target.value;
         orderEntry[name] = value;
         orderEntry.totalPrice = this.calcEstimatedCost();
         console.log(orderEntry);
-        this.setState({ orderEntry });
+        this.setState({orderEntry});
     };
 
     calcEstimatedCost = () => {
-        const { orderEntry } = this.state;
+        const {orderEntry} = this.state;
         return orderEntry.shares * orderEntry.price;
     };
 
 
     renderOrderHistory = () => {
-        const { orderList } = this.state;
+        const {orderList} = this.state;
         return (
             <section>
                 <h3>Order History</h3>
@@ -393,7 +475,7 @@ class App extends Component {
     };
 
     renderStockList = () => {
-        const { stockList } = this.state;
+        const {stockList} = this.state;
         return (
             <section>
                 <h3>Stock List</h3>
@@ -440,7 +522,7 @@ class App extends Component {
     };
 
     renderBidTable = () => {
-        const { bidList } = this.state;
+        const {bids} = this.state;
         return (
             <table>
                 <tbody>
@@ -451,7 +533,7 @@ class App extends Component {
                 </tr>
                 </tbody>
                 <tbody>
-                {this.renderBids(bidList)}
+                {this.renderBids(bids)}
                 </tbody>
             </table>
         );
@@ -470,7 +552,7 @@ class App extends Component {
     };
 
     renderAskTable = () => {
-        const { askList } = this.state;
+        const {asks} = this.state;
         return (
             <table>
                 <tbody>
@@ -481,7 +563,7 @@ class App extends Component {
                 </tr>
                 </tbody>
                 <tbody>
-                {this.renderAsks(askList)}
+                {this.renderAsks(asks)}
                 </tbody>
             </table>
         );
@@ -491,22 +573,13 @@ class App extends Component {
         return asks.map((ask, key) => {
             return (
                 <tr key={key}>
-                    <td>{ask.total}</td>
-                    <td>{ask.size}</td>
                     <td>{ask.ask}</td>
+                    <td>{ask.size}</td>
+                    <td>{ask.total}</td>
                 </tr>
             );
         });
     };
-
-    renderAssets = assets => assets.map((asset, key) => this.renderAsset(asset, key));
-
-    renderAsset = (asset, key) =>
-        <tr key={key}>
-            <td>{asset.name}</td>
-            <td>{asset.symbol}</td>
-            <td>{asset.balanceOf}</td>
-        </tr>;
 
     handleAccountFormChange = (event) => {
         const text = event.target.value;
@@ -523,28 +596,22 @@ class App extends Component {
 
     handleFiatInputChange = (event) => {
         const text = event.target.value;
-        this.setState({ fiatToBuy: text });
+        this.setState({fiatToBuy: text});
     };
 
     handleStockInputChange = (event) => {
         const text = event.target.value;
-        this.setState({ stockToBuy: text });
+        this.setState({stockToBuy: text});
     };
 
     handleDepositInputChange = (event) => {
         const text = event.target.value;
-        this.setState({ fiatDeposit: text });
+        this.setState({fiatDeposit: text});
     };
 
     handleAAPLDepositInputChange = (event) => {
         const text = event.target.value;
-        this.setState({ aaplDeposit: text });
-    };
-
-    handleOrderAmountChange = (event) => {
-        const text = event.target.value;
-        const name = event.target.name;
-        this.setState({ [name]: text });
+        this.setState({aaplDeposit: text});
     };
 
     createAccount = async (event) => {
@@ -557,7 +624,7 @@ class App extends Component {
     };
 
     handleLogin = (event) => {
-        const { accountName, accountPassword } = this.state;
+        const {accountName, accountPassword} = this.state;
         event.preventDefault();
 
         const accountExists = localStorage.getItem(accountName) != null;
@@ -566,7 +633,7 @@ class App extends Component {
     };
 
     login = async (name, password) => {
-        const { web3 } = this.state;
+        const {web3} = this.state;
         // Decrypt account
         const encryptedAccount = JSON.parse(localStorage.getItem(name));
         const account = web3.eth.accounts.decrypt(encryptedAccount, password);
@@ -597,25 +664,25 @@ class App extends Component {
     };
 
     getEtherBalanceOf = async address => {
-        const { web3 } = this.state;
+        const {web3} = this.state;
         const balance = await web3.eth.getBalance(address);
         return await web3.utils.fromWei(balance);
     };
 
     getUSDXBalanceOf = async address => {
-        const { web3, contracts } = this.state;
+        const {web3, contracts} = this.state;
         const balance = await contracts.fiat.methods.balanceOf(address).call();
         return await web3.utils.fromWei(balance);
     };
 
     getAAPLBalanceOf = async address => {
-        const { contracts } = this.state;
+        const {contracts} = this.state;
         const balance = await contracts.stock.methods.balanceOf(address).call();
         return balance;
     };
 
     getDepositOnDex = async (address) => {
-        const { web3, contracts } = this.state;
+        const {web3, contracts} = this.state;
         // Should call a method of dex instead dex.methods.depositsOf(address);
         // returns a list like [ [tokenAddress, amount] ]
         const balance = await contracts.fiat.methods.balanceOf(contracts.dex.options.address).call();
@@ -623,7 +690,7 @@ class App extends Component {
     };
 
     getAAPLDepositOnDex = async () => {
-        const { web3, contracts } = this.state;
+        const {web3, contracts} = this.state;
         // Should call a method of dex instead dex.methods.depositsOf(address);
         // returns a list like [ [tokenAddress, amount] ]
         // TODO: contracts.dex.option.balanceOf(session.address).call();
@@ -633,7 +700,7 @@ class App extends Component {
     };
 
     getEther = async () => {
-        const { accounts, session, web3 } = this.state;
+        const {accounts, session, web3} = this.state;
 
         // Suggar account
         const suggar = {
@@ -650,7 +717,7 @@ class App extends Component {
     };
 
     buyFiat = async () => {
-        const { session, contracts, fiatToBuy } = this.state;
+        const {session, contracts, fiatToBuy} = this.state;
 
         // Rate should/could be dynamic.
         const rate = await contracts.crowdsale.methods.rate().call();
@@ -673,7 +740,7 @@ class App extends Component {
     };
 
     buyStock = async () => {
-        const { contracts, session, web3 } = this.state;
+        const {contracts, session, web3} = this.state;
         const from = {
             address: session.address,
             privateKey: session.pk.substr(2),
@@ -699,7 +766,7 @@ class App extends Component {
     };
 
     depositAAPL = async () => {
-        const { contracts, session, web3, aaplDeposit } = this.state;
+        const {contracts, session, web3, aaplDeposit} = this.state;
 
         // Routing setup.
         const from = {
@@ -736,7 +803,7 @@ class App extends Component {
     };
 
     deposit = async () => {
-        const { contracts, session, web3, fiatDeposit } = this.state;
+        const {contracts, session, web3, fiatDeposit} = this.state;
 
         // Routing setup.
         const from = {
@@ -773,7 +840,7 @@ class App extends Component {
     };
 
     placeOrder = async () => {
-        const { session, contracts, web3, orderEntry } = this.state;
+        const {session, contracts, web3, orderEntry} = this.state;
         // Helpers.
         const USDXToWei = n => web3.utils.toWei(n.toString(), 'ether');
 
@@ -798,7 +865,7 @@ class App extends Component {
         };
 
         // Build message.
-        let message =  abi.soliditySHA3(
+        let message = abi.soliditySHA3(
             ["address", "address", "uint256", "uint256", "address", "uint256"],
             [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, nonce]
         );
@@ -824,7 +891,7 @@ class App extends Component {
     };
 
     signMessage = async (message, privateKey) => {
-        const { web3 } = this.state;
+        const {web3} = this.state;
         return await web3.eth.accounts.sign(
             "0x" + message.toString("hex"),
             privateKey
@@ -843,8 +910,8 @@ class App extends Component {
     };
 
     buildTransactionObject = async (from, to, value, data) => {
-        const { web3 } = this.state;
-        return new Promise(async function(resolve, reject) {
+        const {web3} = this.state;
+        return new Promise(async function (resolve, reject) {
             let txObject;
             try {
                 const txCount = await web3.eth.getTransactionCount(from.address);
@@ -857,7 +924,7 @@ class App extends Component {
                     gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei'))
                 };
                 resolve(txObject);
-            } catch(error) {
+            } catch (error) {
                 reject(error);
             }
         });
@@ -869,7 +936,7 @@ class App extends Component {
         try {
             tx = new Tx(txData);
             tx.sign(bufferedPk);
-        } catch(error) {
+        } catch (error) {
             console.log(error);
         }
         const serializedTx = tx.serialize();
@@ -877,7 +944,7 @@ class App extends Component {
     };
 
     sendSignedTransaction = async tx => {
-        const { web3 } = this.state;
+        const {web3} = this.state;
         let res = await web3.eth.sendSignedTransaction(tx, (err, txHash) => {
             if (err) console.log(err);
             else console.log('txHash: ', txHash);
