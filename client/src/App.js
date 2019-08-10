@@ -255,7 +255,7 @@ class App extends Component {
         listedAssets[2].price = this.state.lowestAsk.ask;
 
         // DEX
-        const usdxDepositOnDex = await this.getDepositOnDex(account);
+        const usdxDepositOnDex = await this.getUSDXDepositOnDex(account);
         const aaplDepositOnDex = await this.getAAPLDepositOnDex(account);
 
         this.setState({listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex});
@@ -427,8 +427,7 @@ class App extends Component {
                 <input name="shares" placeholder="Number of shares" onChange={this.handleOrderEntryChange}/>
                 <p>Price</p>
                 {orderEntry.orderType === 'Limit' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange}/>}
-                {orderEntry.orderType === 'Market' && orderEntry.side === 'BUY' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={lowestAskPrice}/>}
-                {orderEntry.orderType === 'Market' && orderEntry.side === 'SELL' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={highestBidPrice}/>}
+                {orderEntry.orderType === 'Market' && this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
                 <p>Estimated cost</p>
                 <p>{orderEntry.totalPrice}</p>
                 <button onClick={this.placeOrder}>{orderEntry.side === 'BUY' ? 'Buy' : 'Sell'}</button>
@@ -436,12 +435,28 @@ class App extends Component {
         );
     };
 
+    renderMarketPriceInput = (askPrice, bidPrice) => {
+        const { orderEntry } = this.state;
+        if (orderEntry.side === 'BUY') {
+            return <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={askPrice}/>
+        } else {
+            return <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={bidPrice}/>
+        }
+    };
+
     handleOrderEntryChange = (event) => {
-        const {orderEntry} = this.state;
+        const {orderEntry, highestBid, lowestAsk} = this.state;
         const name = event.target.name;
         const value = event.target.value;
         orderEntry[name] = value;
         orderEntry.totalPrice = this.calcEstimatedCost();
+        if ((name === 'orderType' && value === 'Market') || (name === 'side' && orderEntry.orderType === 'Market')) {
+            if (orderEntry.side === 'BUY') {
+                orderEntry.price = lowestAsk.ask;
+            } else {
+                orderEntry.price = highestBid.bid;
+            }
+        }
         console.log(orderEntry);
         this.setState({orderEntry});
     };
@@ -708,7 +723,7 @@ class App extends Component {
         return balance;
     };
 
-    getDepositOnDex = async (address) => {
+    getUSDXDepositOnDex = async (address) => {
         const {web3, contracts} = this.state;
         // Should call a method of dex instead dex.methods.depositsOf(address);
         // returns a list like [ [tokenAddress, amount] ]
@@ -737,15 +752,17 @@ class App extends Component {
         }
     };
 
-    // getDeposit = async (account, token) => {
-    //     try {
-    //         const balance = await contracts.dex.methods.balanceOf(address, contracts.stock.options.address).call();
-    //         return web3.utils.fromWei(balance);
-    //     } catch(error) {
-    //         console.log(error);
-    //         return 0;
-    //     }
-    // };
+    getDepositOnDEX = async (account, token, isStock) => {
+        const { contracts, web3 } = this.state;
+        try {
+            const balance = await contracts.dex.methods.balanceOf(account, token).call();
+            if (isStock) return balance;
+            else return web3.utils.fromWei(balance);
+        } catch(error) {
+            console.log(error);
+            return 0;
+        }
+    };
 
     getEther = async () => {
         const {accounts, session, web3} = this.state;
@@ -912,28 +929,51 @@ class App extends Component {
             side: orderEntry.side,
         };
 
-        // Build message.
-        let message = abi.soliditySHA3(
-            ["address", "address", "uint256", "uint256", "address", "uint256"],
-            [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, nonce]
-        );
+        let traderHasEnoughFundsDeposited = false;
+        if (orderEntry.side === 'BUY') {
+            const deposit = await this.getDepositOnDEX(orderData.addressMaker, orderData.tokenMaker, false);
+            let amount = web3.utils.fromWei(orderData.amountMaker);
+            if (parseFloat(deposit) >= parseFloat(amount)) {
+                console.log("Trader has enough deposited.");
+                traderHasEnoughFundsDeposited = true;
+            } else {
+                alert("You need to lock enough funds on DEX.");
+            }
+        } else if (orderEntry.side === 'SELL') {
+            const deposit = await this.getDepositOnDEX(orderData.addressMaker, orderData.tokenMaker, true);
+            let amount = orderData.amountMaker;
+            if (parseFloat(deposit) >= parseFloat(amount)) {
+                console.log("Trader has enough deposited.");
+                traderHasEnoughFundsDeposited = true;
+            } else {
+                alert("You need to lock enough funds on DEX.");
+            }
+        }
 
-        // Sign message.
-        let signatureObject = await this.signMessage(message, session.pk);
+        if (traderHasEnoughFundsDeposited) {
+            // Build message.
+            let message = abi.soliditySHA3(
+                ["address", "address", "uint256", "uint256", "address", "uint256"],
+                [tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, nonce]
+            );
 
-        // Sender order and signature to Order Book
-        const params = JSON.stringify({
-            orderData: orderData,
-            messageHash: signatureObject.messageHash,
-            signature: signatureObject.signature
-        });
+            // Sign message.
+            let signatureObject = await this.signMessage(message, session.pk);
 
-        try {
-            const res = await axios.post('http://127.0.0.1:8000/orders', params);
-            console.log(res.status);
-        } catch(error) {
-            console.log("Order placement failed");
-            console.log(error);
+            // Sender order and signature to Order Book
+            const params = JSON.stringify({
+                orderData: orderData,
+                messageHash: signatureObject.messageHash,
+                signature: signatureObject.signature
+            });
+
+            try {
+                const res = await axios.post('http://127.0.0.1:8000/orders', params);
+                console.log(res.status);
+            } catch(error) {
+                console.log("Order placement failed");
+                console.log(error);
+            }
         }
     };
 
