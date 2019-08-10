@@ -186,6 +186,30 @@ contract('StockICO', async accounts => {
     //         console.log("INV AAPL: " + investorAAPLBalance.toString());
     //         console.log("DEX AAPL: " + dexAAPLBalance.toString());
     //     });
+
+        it('can see their deposited amount on DEX', async function () {
+            // Investor buys USDX
+            await this.crowdsale.sendTransaction({ from: this.investor1, value: USDXToWei(2000)});
+            await this.crowdsale.sendTransaction({ from: this.investor2, value: USDXToWei(2000)});
+
+            // Investor buys AAPL shares with USDX
+            await this.stockICO.buyStock(600, { from: this.investor1 });
+            await this.stockICO.buyStock(1000, { from: this.investor2 });
+
+
+            // Investor deposit USDX to DEX smart contract.
+            await this.DEX.deposit(this.fiat.address, USDXToWei(2000), { from: this.investor1 });
+            await this.DEX.deposit(this.fiat.address, USDXToWei(500), { from: this.investor2 });
+            await this.DEX.deposit(this.stock.address, 2, { from: this.investor1 });
+            await this.DEX.deposit(this.stock.address, 4, { from: this.investor2 });
+
+            // Investors query their deposited amount.
+            let depositOfInv1 = await this.DEX.balanceOf(this.investor1, this.fiat.address);
+            let depositOfInv2 = await this.DEX.balanceOf(this.investor2, this.fiat.address);
+            console.log(depositOfInv1.toString());
+            console.log(depositOfInv2.toString());
+
+        });
     });
 
     describe('matching engine', function () {

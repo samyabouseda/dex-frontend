@@ -256,7 +256,7 @@ class App extends Component {
 
         // DEX
         const usdxDepositOnDex = await this.getDepositOnDex(account);
-        const aaplDepositOnDex = await this.getAAPLDepositOnDex();
+        const aaplDepositOnDex = await this.getAAPLDepositOnDex(account);
 
         this.setState({listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex});
     };
@@ -406,7 +406,6 @@ class App extends Component {
 
     renderOrderEntry = () => {
         const {orderEntry, lowestAsk, highestBid} = this.state;
-        const bestPrice = 0;
         let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
         let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
         return (
@@ -713,19 +712,40 @@ class App extends Component {
         const {web3, contracts} = this.state;
         // Should call a method of dex instead dex.methods.depositsOf(address);
         // returns a list like [ [tokenAddress, amount] ]
-        const balance = await contracts.fiat.methods.balanceOf(contracts.dex.options.address).call();
-        return web3.utils.fromWei(balance);
+        try {
+            const balance = await contracts.dex.methods.balanceOf(address, contracts.fiat.options.address).call();
+            return web3.utils.fromWei(balance);
+        } catch(error) {
+            console.log(error);
+            return 0;
+        }
     };
 
-    getAAPLDepositOnDex = async () => {
-        const {web3, contracts} = this.state;
+    getAAPLDepositOnDex = async (address) => {
+        const { contracts } = this.state;
         // Should call a method of dex instead dex.methods.depositsOf(address);
         // returns a list like [ [tokenAddress, amount] ]
-        // TODO: contracts.dex.option.balanceOf(session.address).call();
+        // TODO: contracts.dex.option.balanceOf(session.address, token).call();
         // this method should return the balance of the address received in params.
         // NOT the total of token owned.
-        return await contracts.stock.methods.balanceOf(contracts.dex.options.address).call();
+        try {
+            const balance = await contracts.dex.methods.balanceOf(address, contracts.stock.options.address).call();
+            return balance;
+        } catch(error) {
+            console.log(error);
+            return 0;
+        }
     };
+
+    // getDeposit = async (account, token) => {
+    //     try {
+    //         const balance = await contracts.dex.methods.balanceOf(address, contracts.stock.options.address).call();
+    //         return web3.utils.fromWei(balance);
+    //     } catch(error) {
+    //         console.log(error);
+    //         return 0;
+    //     }
+    // };
 
     getEther = async () => {
         const {accounts, session, web3} = this.state;

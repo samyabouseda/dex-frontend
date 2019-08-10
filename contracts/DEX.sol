@@ -10,6 +10,7 @@ contract DEX {
     address private _owner;
     address private _matchingEngine;
     mapping (address => mapping (address => uint256)) private _tokens;
+    mapping (address => bool) _listedTokens;
 
     struct Trade {
         address tokenMaker;
@@ -40,9 +41,15 @@ contract DEX {
         return _matchingEngine;
     }
 
+    function balanceOf(address account, address token) public view returns (uint256) {
+        require(_listedTokens[token] == true, "Balance: token is not listed yet");
+        return _tokens[token][account];
+    }
+
     function deposit(address token, uint256 amount) public {
         Approvable(token).approveFrom(msg.sender, address(this), amount);
         IERC20(token).transferFrom(msg.sender, address(this), amount);
+        _listedTokens[token] = true;
         _tokens[token][msg.sender] = _tokens[token][msg.sender].add(amount);
     }
 
@@ -61,7 +68,7 @@ contract DEX {
         bytes memory signature
     ) public {
         Trade memory trade = Trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce);
-//        require(msg.sender = _matchingEngine, ");
+//        require(msg.sender = _matchingEngine, "Sender: should be matching engine);
 //        require(isValidSignature(trade, signature), "Trade: signature is invalid.");
 
         // Token exchange
