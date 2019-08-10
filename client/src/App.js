@@ -55,71 +55,72 @@ class App extends Component {
             // {symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0},
             // {symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0},
         ],
-        orderList: [
-            {
-                symbol: "AAPL",
-                name: "Apple Inc.",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "SELL",
-                qty: "20",
-                price: 200.00
-            },
-            {
-                symbol: "AAPL",
-                name: "Apple Inc.",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "BUY",
-                qty: "45",
-                price: 199.04
-            },
-            {
-                symbol: "AAPL",
-                name: "Apple Inc.",
-                status: "CANCELLED",
-                time: "15.03.45",
-                side: "SELL",
-                qty: "45",
-                price: 199.04
-            },
-            {
-                symbol: "MSFT",
-                name: "Microsoft Corporation",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "SELL",
-                qty: "45",
-                price: 199.04
-            },
-            {
-                symbol: "TSLA",
-                name: "Tesla Inc.",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "BUY",
-                qty: "45",
-                price: 199.04
-            },
-            {
-                symbol: "INTC",
-                name: "Inter Corporation",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "SELL",
-                qty: "45",
-                price: 199.04
-            },
-            {
-                symbol: "TSLA",
-                name: "Tesla Inc.",
-                status: "FILLED",
-                time: "15.03.45",
-                side: "BUY",
-                qty: "45",
-                price: 199.04
-            },
-        ],
+        // orderList: [
+        //     {
+        //         symbol: "AAPL",
+        //         name: "Apple Inc.",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "SELL",
+        //         qty: "20",
+        //         price: 200.00
+        //     },
+        //     {
+        //         symbol: "AAPL",
+        //         name: "Apple Inc.",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "BUY",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        //     {
+        //         symbol: "AAPL",
+        //         name: "Apple Inc.",
+        //         status: "CANCELLED",
+        //         time: "15.03.45",
+        //         side: "SELL",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        //     {
+        //         symbol: "MSFT",
+        //         name: "Microsoft Corporation",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "SELL",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        //     {
+        //         symbol: "TSLA",
+        //         name: "Tesla Inc.",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "BUY",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        //     {
+        //         symbol: "INTC",
+        //         name: "Inter Corporation",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "SELL",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        //     {
+        //         symbol: "TSLA",
+        //         name: "Tesla Inc.",
+        //         status: "FILLED",
+        //         time: "15.03.45",
+        //         side: "BUY",
+        //         qty: "45",
+        //         price: 199.04
+        //     },
+        // ],
+        orders: [],
         bids: [],
         highestBid: {bid: 0, size: 0, total: 0},
         asks: [],
@@ -138,6 +139,7 @@ class App extends Component {
     componentDidMount = async () => {
         this.interval = setInterval(() => {
             this.loadBidAsk();
+            this.loadOrders();
         }, 1000);
         try {
             const web3 = await getWeb3();
@@ -225,6 +227,31 @@ class App extends Component {
                 this.setState({ highestBid });
             }
             this.setState({ bids: bids, asks: asks });
+        } catch(error) {
+            console.log(error);
+        }
+    };
+
+    loadOrders = async () => {
+        const { session } = this.state;
+        try {
+            if (session != null) {
+                let res = await axios.get("http://127.0.0.1:8000/orders?of=" + session.address);
+                let data = res.data;
+
+                let orders = data.map(order => {
+                    return {
+                        symbol: "AAPL",
+                        name: "Apple Inc.",
+                        status: order.status,
+                        time: order.timestamp,
+                        side: order.side,
+                        qty: order.qty,
+                        price: order.price,
+                    }
+                });
+                this.setState({ orders });
+            }
         } catch(error) {
             console.log(error);
         }
@@ -468,7 +495,7 @@ class App extends Component {
 
 
     renderOrderHistory = () => {
-        const {orderList} = this.state;
+        const { orders } = this.state;
         return (
             <section>
                 <h3>Order History</h3>
@@ -485,7 +512,7 @@ class App extends Component {
                     </tr>
                     </tbody>
                     <tbody>
-                    {this.renderOrders(orderList)}
+                    {this.renderOrders(orders)}
                     </tbody>
                 </table>
             </section>
