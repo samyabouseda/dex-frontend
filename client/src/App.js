@@ -248,6 +248,7 @@ class App extends Component {
                         side: order.side,
                         qty: order.qty,
                         price: order.price,
+                        hash: order.hash,
                     }
                 });
                 this.setState({ orders });
@@ -530,9 +531,22 @@ class App extends Component {
                     <td>{order.side}</td>
                     <td>{order.qty}</td>
                     <td>{order.price}</td>
+                    <td><button value={order.hash} onClick={this.handleCancelClick}>Cancel</button></td>
                 </tr>
             );
         });
+    };
+
+    handleCancelClick = async (event) => {
+        const orderHash = event.target.value;
+        try {
+            let res = await axios.delete("http://127.0.0.1:8000/orders?hash=" + orderHash);
+            if (res.status === '204') {
+                console.log("Successfully cancelled");
+            }
+        } catch(error) {
+            console.log(error);
+        }
     };
 
     renderHeader = () => {
