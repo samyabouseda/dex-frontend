@@ -30,9 +30,9 @@ class App extends Component {
         // Assets
         listedAssets: [
             // TODO: Get the metadata dynamically.
-            {name: "Ethereum", symbol: "ETH", balanceOf: 0},
-            {name: "US Dollar X", symbol: "USDX", balanceOf: 0},
-            {name: "Apple Inc.", symbol: "AAPL", balanceOf: 0},
+            {name: "Ethereum", symbol: "ETH", balanceOf: 0, price: 0, total: 0},
+            {name: "US Dollar X", symbol: "USDX", balanceOf: 0, price: 0, total: 0},
+            {name: "Apple Inc.", symbol: "AAPL", balanceOf: 0, price: 0, total: 0},
             // {name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0},
         ],
         depositOnDex: 0,
@@ -50,10 +50,10 @@ class App extends Component {
 
         // New UI
         stockList: [
-            {symbol: "AAPL", name: "Apple Inc.", price: 199.04, bid: 0, ask: 0},
-            {symbol: "MSFT", name: "Microsoft Corporation", price: 135.28, bid: 0, ask: 0},
-            {symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0},
-            {symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0},
+            {symbol: "AAPL", name: "Apple Inc.", price: 0, bid: 0, ask: 0},
+            // {symbol: "MSFT", name: "Microsoft Corporation", price: 135.28, bid: 0, ask: 0},
+            // {symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0},
+            // {symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0},
         ],
         orderList: [
             {
@@ -120,22 +120,10 @@ class App extends Component {
                 price: 199.04
             },
         ],
-        // bidList: [
-        //     {bid: 99.02, size: 0, total: 0},
-        //     {bid: 102.32, size: 0, total: 0},
-        //     {bid: 100.45, size: 0, total: 0},
-        //     {bid: 110.54, size: 0, total: 0},
-        //     {bid: 115.00, size: 0, total: 0},
-        // ],
-        // askList: [
-        //     {ask: 98.04, size: 0, total: 0},
-        //     {ask: 97.05, size: 0, total: 0},
-        //     {ask: 97.55, size: 0, total: 0},
-        //     {ask: 96.05, size: 0, total: 0},
-        //     {ask: 92.02, size: 0, total: 0},
-        // ],
         bids: [],
+        highestBid: {bid: 0, size: 0, total: 0},
         asks: [],
+        lowestAsk: {ask: 0, size: 0, total: 0},
         orderEntry: {
             orderType: 'Limit',
             tokenMaker: null, // BUY : tokenMaker = USDX, tokenTaker = STOCK     STOCK is the current selected stock
@@ -148,7 +136,9 @@ class App extends Component {
     };
 
     componentDidMount = async () => {
-        this.interval = setInterval(() => this.loadBidAsk(), 1000);
+        this.interval = setInterval(() => {
+            this.loadBidAsk();
+        }, 1000);
         try {
             const web3 = await getWeb3();
             const accounts = await web3.eth.getAccounts();
@@ -221,21 +211,53 @@ class App extends Component {
     };
 
     loadBidAsk = async () => {
-        let asks = await axios.get("http://127.0.0.1:8000/orders?side=ask");
-        let bids = await axios.get("http://127.0.0.1:8000/orders?side=bid");
-        this.setState({ bids: bids.data, asks: asks.data });
+        try {
+            let asks = await axios.get("http://127.0.0.1:8000/orders?side=ask");
+            let bids = await axios.get("http://127.0.0.1:8000/orders?side=bid");
+            asks = asks.data;
+            bids = bids.data;
+            if (asks.length > 0) {
+                const lowestAsk = asks[asks.length - 1];
+                this.setState({lowestAsk});
+            }
+            if (bids.length > 0) {
+                const highestBid = bids[0];
+                this.setState({ highestBid });
+            }
+            this.setState({ bids: bids, asks: asks });
+        } catch(error) {
+            console.log(error);
+        }
     };
 
     updateBalancesOf = async (account) => {
+        let listedAssets = this.state.listedAssets;
+        // ETH
         const ethBalance = await this.getEtherBalanceOf(account);
+        let ethPrice = 200;
+        try {
+            const ethRes = await axios.get("https://api.coinmarketcap.com/v1/ticker/ethereum/");
+            ethPrice = Math.round(ethRes.data[0].price_usd * 100) / 100;
+        } catch (error) {
+            console.log(error);
+        }
+        listedAssets[0].balanceOf = ethBalance;
+        listedAssets[0].price = await ethPrice;
+
+        // FIAT
         const usdxBalance = await this.getUSDXBalanceOf(account);
+        listedAssets[1].balanceOf = usdxBalance;
+        listedAssets[1].price = 1;
+
+        // STOCK
         const aaplBalance = await this.getAAPLBalanceOf(account);
+        listedAssets[2].balanceOf = aaplBalance;
+        listedAssets[2].price = this.state.lowestAsk.ask;
+
+        // DEX
         const usdxDepositOnDex = await this.getDepositOnDex(account);
         const aaplDepositOnDex = await this.getAAPLDepositOnDex();
-        let listedAssets = this.state.listedAssets;
-        listedAssets[0].balanceOf = ethBalance;
-        listedAssets[1].balanceOf = usdxBalance;
-        listedAssets[2].balanceOf = aaplBalance;
+
         this.setState({listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex});
     };
 
@@ -376,13 +398,17 @@ class App extends Component {
                 <td>{asset.name}</td>
                 <td>{asset.symbol}</td>
                 <td>{asset.balanceOf}</td>
-                {/*TODO: add price and total.*/}
+                <td>{asset.price}</td>
+                <td>{asset.price * asset.balanceOf}</td>
             </tr>
         );
     };
 
     renderOrderEntry = () => {
-        const {orderEntry} = this.state;
+        const {orderEntry, lowestAsk, highestBid} = this.state;
+        const bestPrice = 0;
+        let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
+        let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
         return (
             <section>
                 <p>Order entry</p>
@@ -396,12 +422,14 @@ class App extends Component {
                     <option name="orderTypeOption" value="Limit">Limit</option>
                     <option name="orderTypeOption" value="Market">Market</option>
                 </select>
-                <p>[Ask price]</p>
-                <p>[891.75]</p>
+                <p>{orderEntry.side === 'BUY' ? "Ask price" : "Bid price"}</p>
+                <p>{orderEntry.side === 'BUY' ? lowestAskPrice : highestBidPrice}</p>
                 <p>Shares</p>
                 <input name="shares" placeholder="Number of shares" onChange={this.handleOrderEntryChange}/>
                 <p>Price</p>
-                <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange}/>
+                {orderEntry.orderType === 'Limit' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange}/>}
+                {orderEntry.orderType === 'Market' && orderEntry.side === 'BUY' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={lowestAskPrice}/>}
+                {orderEntry.orderType === 'Market' && orderEntry.side === 'SELL' && <input name="price" placeholder="USDX" onChange={this.handleOrderEntryChange} value={highestBidPrice}/>}
                 <p>Estimated cost</p>
                 <p>{orderEntry.totalPrice}</p>
                 <button onClick={this.placeOrder}>{orderEntry.side === 'BUY' ? 'Buy' : 'Sell'}</button>
@@ -503,9 +531,9 @@ class App extends Component {
                 <tr key={key}>
                     <td>{stock.symbol}</td>
                     <td>{stock.name}</td>
-                    <td>{stock.price}</td>
-                    <td>{stock.bid}</td>
-                    <td>{stock.ask}</td>
+                    <td>{this.state.lowestAsk.ask}</td>
+                    <td>{this.state.highestBid.bid}</td>
+                    <td>{this.state.lowestAsk.ask}</td>
                 </tr>
             );
         });
@@ -879,15 +907,14 @@ class App extends Component {
             messageHash: signatureObject.messageHash,
             signature: signatureObject.signature
         });
-        const res = await axios.post('http://127.0.0.1:8000/orders', params);
 
-        console.log(res.status);
-        console.log(orderData);
-
-        const balanceF = await contracts.fiat.methods.balanceOf(session.address).call();
-        const balanceS = await contracts.fiat.methods.balanceOf(session.address).call();
-        console.log("balance stock" + balanceF);
-        console.log("balance fiat" + balanceS);
+        try {
+            const res = await axios.post('http://127.0.0.1:8000/orders', params);
+            console.log(res.status);
+        } catch(error) {
+            console.log("Order placement failed");
+            console.log(error);
+        }
     };
 
     signMessage = async (message, privateKey) => {
