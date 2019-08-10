@@ -950,7 +950,7 @@ class App extends Component {
             }
         }
 
-        if (traderHasEnoughFundsDeposited) {
+        if (traderHasEnoughFundsDeposited && orderEntry.totalPrice > 0) {
             // Build message.
             let message = abi.soliditySHA3(
                 ["address", "address", "uint256", "uint256", "address", "uint256"],
@@ -974,6 +974,8 @@ class App extends Component {
                 console.log("Order placement failed");
                 console.log(error);
             }
+        } else {
+            alert("You need to fill all the order entry inputs.");
         }
     };
 
