@@ -412,6 +412,8 @@ class App extends Component {
                         <tr>
                             <th>Symbol</th>
                             <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
                         </tr>
                         </tbody>
                         <tbody>
@@ -425,13 +427,27 @@ class App extends Component {
 
     renderBalances = (assets) => {
         return assets.map((asset, key) => {
+            let price = this.getAssetPrice(asset.asset.symbol);
             return (
                 <tr key={key}>
                     <td>{asset.asset.symbol}</td>
                     <td>{asset.asset.amount}</td>
+                    <td>{price}</td>
+                    <td>{asset.asset.amount * price}</td>
                 </tr>
             );
         });
+    };
+
+    getAssetPrice = (symbol) => {
+        const { listedAssets } = this.state;
+        let price = 0;
+        listedAssets.forEach(asset => {
+            if (asset.symbol === symbol) {
+                price = asset.price;
+            }
+        });
+        return price;
     };
 
     renderPortfolio = () => {
@@ -463,8 +479,8 @@ class App extends Component {
     renderAsset = (asset, key) => {
         return (
             <tr key={key}>
-                <td>{asset.name}</td>
                 <td>{asset.symbol}</td>
+                <td>{asset.name}</td>
                 <td>{asset.balanceOf}</td>
                 <td>{asset.price}</td>
                 <td>{asset.price * asset.balanceOf}</td>

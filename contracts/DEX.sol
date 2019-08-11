@@ -68,8 +68,8 @@ contract DEX {
         bytes memory signature
     ) public {
         Trade memory trade = Trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce);
-//        require(msg.sender = _matchingEngine, "Sender: should be matching engine);
-//        require(isValidSignature(trade, signature), "Trade: signature is invalid.");
+        require(msg.sender == _matchingEngine, "Sender: should be matching engine");
+        require(isValidSignature(trade, signature), "Trade: signature is invalid.");
 
         // Token exchange
         IERC20 _tokenMaker = IERC20(tokenMaker);
