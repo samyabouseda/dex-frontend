@@ -35,8 +35,6 @@ class App extends Component {
             {name: "Apple Inc.", symbol: "AAPL", balanceOf: 0, price: 0, total: 0},
             // {name: "Microsoft Corp.", symbol: "MSFT", balanceOf: 0},
         ],
-        depositOnDex: 0,
-        aaplDepositOnDex: 0,
 
         // Trade
         fiatToBuy: 0,
@@ -202,6 +200,7 @@ class App extends Component {
             if (session != null) {
                 let res = await axios.get("http://127.0.0.1:8000/accounts/assets?account=" + session.address);
                 let assets = res.data.account.assets;
+                console.log(assets);
                 this.setState({ assetBalances: assets });
             }
         } catch (error) {
@@ -233,11 +232,7 @@ class App extends Component {
         listedAssets[2].balanceOf = aaplBalance;
         listedAssets[2].price = this.state.lowestAsk.ask;
 
-        // DEX
-        const usdxDepositOnDex = await this.getUSDXDepositOnDex(account);
-        const aaplDepositOnDex = await this.getAAPLDepositOnDex(account);
-
-        this.setState({listedAssets, depositOnDex: usdxDepositOnDex, aaplDepositOnDex});
+        this.setState({ listedAssets });
     };
 
     render() {
@@ -771,45 +766,15 @@ class App extends Component {
         return balance;
     };
 
-    getUSDXDepositOnDex = async (address) => {
-        const {web3, contracts} = this.state;
-        // Should call a method of dex instead dex.methods.depositsOf(address);
-        // returns a list like [ [tokenAddress, amount] ]
-        try {
-            const balance = await contracts.dex.methods.balanceOf(address, contracts.fiat.options.address).call();
-            return web3.utils.fromWei(balance);
-        } catch(error) {
-            console.log(error);
-            return 0;
-        }
-    };
-
-    getAAPLDepositOnDex = async (address) => {
-        const { contracts } = this.state;
-        // Should call a method of dex instead dex.methods.depositsOf(address);
-        // returns a list like [ [tokenAddress, amount] ]
-        // TODO: contracts.dex.option.balanceOf(session.address, token).call();
-        // this method should return the balance of the address received in params.
-        // NOT the total of token owned.
-        try {
-            const balance = await contracts.dex.methods.balanceOf(address, contracts.stock.options.address).call();
-            return balance;
-        } catch(error) {
-            console.log(error);
-            return 0;
-        }
-    };
-
     getDepositOnDEX = async (account, token, isStock) => {
-        const { contracts, web3 } = this.state;
-        try {
-            const balance = await contracts.dex.methods.balanceOf(account, token).call();
-            if (isStock) return balance;
-            else return web3.utils.fromWei(balance);
-        } catch(error) {
-            console.log(error);
-            return 0;
-        }
+        const { assetBalances } = this.state;
+        let balance = 0;
+        assetBalances.forEach(asset => {
+            if (asset.asset.address === token.toString()) {
+                balance = asset.asset.amount;
+            }
+        });
+        return balance;
     };
 
     getEther = async () => {
