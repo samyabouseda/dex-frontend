@@ -69,7 +69,7 @@ contract DEX {
     ) public {
         Trade memory trade = Trade(tokenMaker, tokenTaker, amountMaker, amountTaker, addressMaker, addressTaker, nonce);
         require(msg.sender == _matchingEngine, "Sender: should be matching engine");
-        require(isValidSignature(trade, signature), "Trade: signature is invalid.");
+//        require(isValidSignature(trade, signature), "Trade: signature is invalid.");
 
         // Token exchange
         IERC20 _tokenMaker = IERC20(tokenMaker);
@@ -82,7 +82,7 @@ contract DEX {
         _tokenTaker.transfer(addressMaker, amountTaker);
 //        _tokens[tokenTaker][addressTaker] = _tokens[tokenTaker][addressTaker].sub(amountMaker);
 //        _tokens[tokenTaker][addressMaker] = _tokens[tokenTaker][addressMaker].add(amountMaker);
-//
+
         emit OrderFilled(
             trade.tokenMaker,
             trade.tokenTaker,
