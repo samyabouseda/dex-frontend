@@ -43,6 +43,7 @@ class App extends Component {
         stockToBuy: 0,
         fiatDeposit: 0,
         aaplDeposit: 0,
+        // TODO: Transform in trade entry.
 
         // Contracts
         contracts: {},
@@ -55,71 +56,6 @@ class App extends Component {
             // {symbol: "INTC", name: "Intel Corporation", price: 46.73, bid: 0, ask: 0},
             // {symbol: "TSLA", name: "Tesla Inc.", price: 234.50, bid: 0, ask: 0},
         ],
-        // orderList: [
-        //     {
-        //         symbol: "AAPL",
-        //         name: "Apple Inc.",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "SELL",
-        //         qty: "20",
-        //         price: 200.00
-        //     },
-        //     {
-        //         symbol: "AAPL",
-        //         name: "Apple Inc.",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "BUY",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        //     {
-        //         symbol: "AAPL",
-        //         name: "Apple Inc.",
-        //         status: "CANCELLED",
-        //         time: "15.03.45",
-        //         side: "SELL",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        //     {
-        //         symbol: "MSFT",
-        //         name: "Microsoft Corporation",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "SELL",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        //     {
-        //         symbol: "TSLA",
-        //         name: "Tesla Inc.",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "BUY",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        //     {
-        //         symbol: "INTC",
-        //         name: "Inter Corporation",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "SELL",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        //     {
-        //         symbol: "TSLA",
-        //         name: "Tesla Inc.",
-        //         status: "FILLED",
-        //         time: "15.03.45",
-        //         side: "BUY",
-        //         qty: "45",
-        //         price: 199.04
-        //     },
-        // ],
         orders: [],
         bids: [],
         highestBid: {bid: 0, size: 0, total: 0},
@@ -133,13 +69,15 @@ class App extends Component {
             price: 0,
             totalPrice: 0,
             side: 'BUY',
-        }
+        },
+        assetBalances: [],
     };
 
     componentDidMount = async () => {
         this.interval = setInterval(() => {
             this.loadBidAsk();
             this.loadOrders();
+            this.loadBalances();
         }, 1000);
         try {
             const web3 = await getWeb3();
@@ -258,6 +196,19 @@ class App extends Component {
         }
     };
 
+    loadBalances = async () => {
+        const { session } = this.state;
+        try {
+            if (session != null) {
+                let res = await axios.get("http://127.0.0.1:8000/accounts/assets?account=" + session.address);
+                let assets = res.data.account.assets;
+                this.setState({ assetBalances: assets });
+            }
+        } catch (error) {
+
+        }
+    };
+
     updateBalancesOf = async (account) => {
         let listedAssets = this.state.listedAssets;
         // ETH
@@ -326,12 +277,105 @@ class App extends Component {
             </div>);
     };
 
+    createAccount = async (event) => {
+        event.preventDefault();
+        const {web3, accountName, accountPassword} = this.state;
+        const account = web3.eth.accounts.create();
+        const encryptedAccount = web3.eth.accounts.encrypt(account.privateKey, accountPassword);
+        try {
+            localStorage.setItem(accountName, JSON.stringify(encryptedAccount));
+            const data = JSON.stringify({
+                address: account.address,
+            });
+            console.log(data);
+            let res = await axios.post("http://127.0.0.1:8000/accounts", data);
+            if (res.status === 201) console.log("Account created successfully.");
+            else if (res.status === 409) console.log("Account already exists");
+        } catch (error) {
+            alert("Account creation failed. Please try again.");
+        }
+        this.login(accountName, accountPassword);
+    };
+
+    handleLogin = (event) => {
+        const {accountName, accountPassword} = this.state;
+        event.preventDefault();
+
+        const accountExists = localStorage.getItem(accountName) != null;
+        if (accountExists) this.login(accountName, accountPassword);
+        else alert("The account " + accountName + " doesn't exists.");
+    };
+
+    login = async (name, password) => {
+        const {web3} = this.state;
+        // Decrypt account
+        const encryptedAccount = JSON.parse(localStorage.getItem(name));
+        const account = web3.eth.accounts.decrypt(encryptedAccount, password);
+
+        // Store session cookie.
+        const session = {
+            accountName: name,
+            address: account.address,
+            pk: account.privateKey,
+            isLogged: true,
+        };
+        localStorage.setItem('trading.session', JSON.stringify(session));
+
+        const ethBalance = await this.getEtherBalanceOf(session.address);
+        const usdxBalance = await this.getUSDXBalanceOf(session.address);
+        // Update app state
+        this.setState({accountAddress: account.address, isLogged: true, session, ethBalance, usdxBalance});
+    };
+
+    handleLoggout = () => {
+        localStorage.removeItem('trading.session');
+        this.setState({
+            isLogged: false,
+            accountName: '',
+            accountAddress: '',
+            session: null,
+        });
+    };
+
 
     renderUIforLoggedUser = () => {
         return (
             <div>
                 {this.renderHeader()}
                 {this.renderAccountInfo()}
+                {this.renderTradingUI()}
+            </div>
+        );
+    };
+
+    renderTradingUI = () => {
+        return (
+            <section>
+                {this.renderDeposits()}
+                {this.renderStockList()}
+                {this.renderOrderEntry()}
+                {this.renderOrderBook()}
+                {this.renderOrderHistory()}
+                {this.renderPortfolio()}
+            </section>
+        );
+    };
+
+    renderAccountInfo = () => {
+        return (
+            <header>
+                <p>Account name: {this.state.accountName}</p>
+                <p>Account address: {this.state.accountAddress}</p>
+                <button onClick={this.handleLoggout}>Logout</button>
+            </header>
+        );
+    };
+
+    renderDeposits = () => {
+        const { assetBalances } = this.state;
+        return (
+            <div>
+                <h3>Balances</h3>
                 <section>
                     <div>
                         <button onClick={this.getEther}>Get Ether</button>
@@ -344,6 +388,7 @@ class App extends Component {
                     </div>
 
                     <div>
+                        {/*<p>Stock should only be sold through IPO/ICO. This if for demo purposes.</p>*/}
                         <input type="text" name="stockToBuy" placeholder="Amount in USDX"
                                onChange={this.handleStockInputChange}/>
                         <button onClick={this.buyStock}>Buy stock</button>
@@ -361,38 +406,33 @@ class App extends Component {
                         <button onClick={this.depositAAPL}>Deposit AAPL</button>
                     </div>
                 </section>
-
-                {this.renderTradingUI()}
+                <div>
+                    <table>
+                        <tbody>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Qty</th>
+                        </tr>
+                        </tbody>
+                        <tbody>
+                        {this.renderBalances(assetBalances)}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     };
 
-    renderTradingUI = () => {
-        return (
-            <section>
-                {this.renderStockList()}
-                {this.renderOrderEntry()}
-                {this.renderOrderBook()}
-                {this.renderOrderHistory()}
-                {this.renderPortfolio()}
-            </section>
-        );
+    renderBalances = (assets) => {
+        return assets.map((asset, key) => {
+            return (
+                <tr key={key}>
+                    <td>{asset.asset.symbol}</td>
+                    <td>{asset.asset.amount}</td>
+                </tr>
+            );
+        });
     };
-
-    renderAccountInfo = () => {
-        return (
-            <header>
-                <p>Account name: {this.state.accountName}</p>
-                <p>Account address: {this.state.accountAddress}</p>
-                <p>ETH: {this.state.listedAssets[0].balanceOf}</p>
-                <p>USDX: {this.state.listedAssets[1].balanceOf}</p>
-                <p>Deposit USDX: {this.state.depositOnDex}</p>
-                <p>Deposit AAPL: {this.state.aaplDepositOnDex}</p>
-                <button onClick={this.handleLoggout}>Logout</button>
-            </header>
-        );
-    };
-
 
     renderPortfolio = () => {
         return (
@@ -697,55 +737,6 @@ class App extends Component {
         this.setState({aaplDeposit: text});
     };
 
-    createAccount = async (event) => {
-        event.preventDefault();
-        const {web3, accountName, accountPassword} = this.state;
-        const account = web3.eth.accounts.create();
-        const encryptedAccount = web3.eth.accounts.encrypt(account.privateKey, accountPassword);
-        localStorage.setItem(accountName, JSON.stringify(encryptedAccount));
-        this.login(accountName, accountPassword);
-    };
-
-    handleLogin = (event) => {
-        const {accountName, accountPassword} = this.state;
-        event.preventDefault();
-
-        const accountExists = localStorage.getItem(accountName) != null;
-        if (accountExists) this.login(accountName, accountPassword);
-        else alert("The account " + accountName + " doesn't exists.");
-    };
-
-    login = async (name, password) => {
-        const {web3} = this.state;
-        // Decrypt account
-        const encryptedAccount = JSON.parse(localStorage.getItem(name));
-        const account = web3.eth.accounts.decrypt(encryptedAccount, password);
-
-        // Store session cookie.
-        const session = {
-            accountName: name,
-            address: account.address,
-            pk: account.privateKey,
-            isLogged: true,
-        };
-        localStorage.setItem('trading.session', JSON.stringify(session));
-
-        const ethBalance = await this.getEtherBalanceOf(session.address);
-        const usdxBalance = await this.getUSDXBalanceOf(session.address);
-        // Update app state
-        this.setState({accountAddress: account.address, isLogged: true, session, ethBalance, usdxBalance});
-    };
-
-    handleLoggout = () => {
-        localStorage.removeItem('trading.session');
-        this.setState({
-            isLogged: false,
-            accountName: '',
-            accountAddress: '',
-            session: null,
-        });
-    };
-
     getEtherBalanceOf = async address => {
         const {web3} = this.state;
         const balance = await web3.eth.getBalance(address);
@@ -903,9 +894,27 @@ class App extends Component {
         const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
         const value = '';
 
-        this.sendTransaction(from, to, value, data);
+        try {
+            const json = JSON.stringify({
+                account_address: session.address,
+                asset: {
+                    symbol: "AAPL",
+                    address: contracts.stock.options.address,
+                    amount: parseFloat(deposit),
+                }
+            });
+            let res = await axios.post("http://127.0.0.1:8000/accounts/assets", json);
+            console.log(res.status);
+            if (res.status === 201) {
+                console.log("Deposit recorded successfully on backend.");
 
-        this.updateBalancesOf(session.address);
+                this.sendTransaction(from, to, value, data);
+
+                this.updateBalancesOf(session.address);
+            }
+        } catch (error) {
+            alert("Deposit failed, please try again.")
+        }
     };
 
     deposit = async () => {
@@ -939,10 +948,28 @@ class App extends Component {
         const params = [contracts.fiat.options.address, deposit.toString()];
         const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
         const value = '';
+        
+        try {
+            const json = JSON.stringify({
+                account_address: session.address,
+                asset: {
+                    symbol: "USDX",
+                    address: contracts.fiat.options.address,
+                    amount: parseFloat(fiatDeposit),
+                }
+            });
+            let res = await axios.post("http://127.0.0.1:8000/accounts/assets", json);
+            console.log(res.status);
+            if (res.status === 201) {
+                console.log("Deposit recorded successfully on backend.");
 
-        this.sendTransaction(from, to, value, data);
+                this.sendTransaction(from, to, value, data);
 
-        this.updateBalancesOf(session.address);
+                this.updateBalancesOf(session.address);
+            }
+        } catch (error) {
+            alert("Deposit failed, please try again.")
+        }
     };
 
     placeOrder = async () => {
