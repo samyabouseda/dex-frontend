@@ -5,7 +5,7 @@ import Stock from "./contracts/Stock";
 import StockICO from "./contracts/StockICO";
 import DEX from "./contracts/DEX";
 import getWeb3 from "./utils/getWeb3";
-import "./App.css";
+import './App.css';
 
 import axios from "axios";
 
@@ -348,10 +348,10 @@ class App extends Component {
             <section>
                 {this.renderDeposits()}
                 {this.renderStockList()}
+                {this.renderPortfolio()}
                 {this.renderOrderEntry()}
                 {this.renderOrderBook()}
                 {this.renderOrderHistory()}
-                {this.renderPortfolio()}
             </section>
         );
     };
@@ -488,11 +488,11 @@ class App extends Component {
         let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
         let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
         return (
-            <section>
+            <section className={"orderEntry"}>
                 <p>Order entry</p>
                 <div>
-                    <button name="side" value="BUY" onClick={this.handleOrderEntryChange}>Buy</button>
-                    <button name="side" value="SELL" onClick={this.handleOrderEntryChange}>Sell</button>
+                    <button name="side" value="BUY" onClick={this.handleOrderEntryChange} className="buyBtn">Buy</button>
+                    <button name="side" value="SELL" onClick={this.handleOrderEntryChange} className="sellBtn">Sell</button>
                 </div>
                 <p>Stock</p>
                 <p>Order type</p>
@@ -582,7 +582,7 @@ class App extends Component {
                     <td>{order.side}</td>
                     <td>{order.qty}</td>
                     <td>{order.price}</td>
-                    <td><button value={order.hash} onClick={this.handleCancelClick}>Cancel</button></td>
+                    <td>{order.status !== 'FILLED' && <button value={order.hash} onClick={this.handleCancelClick}>Cancel</button>}</td>
                 </tr>
             );
         });
@@ -647,11 +647,13 @@ class App extends Component {
 
     renderOrderBook = () => {
         return (
-            <section>
+            <>
                 <h3>Order Book AAPL/USDX</h3>
+            <section className="ob">
                 {this.renderBidTable()}
                 {this.renderAskTable()}
             </section>
+                </>
         );
     };
 
@@ -925,8 +927,9 @@ class App extends Component {
                 },
             ]
         };
-        const deposit = fiatDeposit * 1000000000000000000;
-        const params = [contracts.fiat.options.address, deposit.toString()];
+        const deposit = (fiatDeposit * 1000).toString() + "000000000000000";
+        console.log(deposit);
+        const params = [contracts.fiat.options.address, deposit];
         const data = web3.eth.abi.encodeFunctionCall(jsonInterface, params);
         const value = '';
         
