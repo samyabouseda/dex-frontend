@@ -8,7 +8,7 @@ const Portfolio = ({ user }) => {
     <DashboardCard title={"Portfolio"}>
       <header className={styles.header}>
         <h2 className={styles.header__total}>${user.totalDeposited}</h2>
-        <p className={styles.label}>Tradable limit (amount deposited)</p>
+        <p className={styles.label}>Total owned</p>
       </header>
       {_renderAssets(user.balances)}
     </DashboardCard>

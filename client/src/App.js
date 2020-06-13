@@ -14,6 +14,8 @@ import LoggedInHeader from "./components/LoggedInHeader";
 import DashboardCard from "./components/DashboardCard";
 import Portfolio from "./components/Portfolio";
 import OrderBook from "./components/OrderBook/OrderBook";
+// import InstrumentSelect from "./components/InstrumentSelect";
+import OrderForm from "./components/OrderForm";
 
 //
 
@@ -372,18 +374,22 @@ class App extends Component {
   };
 
   renderUIforLoggedUser = () => {
+    const instruments = [];
+    const onSelect = () => ({});
     return (
       <div>
-        <LoggedInHeader />
+        <LoggedInHeader>
+          {/* <InstrumentSelect instruments={instruments} onSelect={onSelect} /> */}
+        </LoggedInHeader>
         <Dashboard>
           {this.renderAccountInfo()}
           <section>
             {this.renderPortfolio()}
-            {this.renderDeposits()}
+            {this.renderOrderBook()}
             {this.renderStockList()}
             {this.renderOrderEntry()}
-            {this.renderOrderBook()}
             {this.renderOrderHistory()}
+            {this.renderDeposits()}
           </section>
         </Dashboard>
       </div>
@@ -511,61 +517,73 @@ class App extends Component {
     const { orderEntry, lowestAsk, highestBid } = this.state;
     let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
     let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
+    const instrument = {
+      highestAsk: lowestAskPrice,
+      lowestBid: highestBidPrice,
+    };
+    const user = {};
+    const onSubmit = this.placeOrder;
     return (
-      <DashboardCard className={"orderEntry"}>
-        <div>
-          <button
-            name="side"
-            value="BUY"
-            onClick={this.handleOrderEntryChange}
-            className="buyBtn"
-          >
-            Buy
-          </button>
-          <button
-            name="side"
-            value="SELL"
-            onClick={this.handleOrderEntryChange}
-            className="sellBtn"
-          >
-            Sell
-          </button>
-        </div>
-        <p>Stock</p>
-        <p>Order type</p>
-        <select name="orderType" onChange={this.handleOrderEntryChange}>
-          <option name="orderTypeOption" value="Limit">
-            Limit
-          </option>
-          <option name="orderTypeOption" value="Market">
-            Market
-          </option>
-        </select>
-        <p>{orderEntry.side === "BUY" ? "Ask price" : "Bid price"}</p>
-        <p>{orderEntry.side === "BUY" ? lowestAskPrice : highestBidPrice}</p>
-        <p>Shares</p>
-        <input
-          name="shares"
-          placeholder="Number of shares"
-          onChange={this.handleOrderEntryChange}
-        />
-        <p>Price</p>
-        {orderEntry.orderType === "Limit" && (
-          <input
-            name="price"
-            placeholder="USDX"
-            onChange={this.handleOrderEntryChange}
-          />
-        )}
-        {orderEntry.orderType === "Market" &&
-          this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
-        <p>Estimated cost</p>
-        <p>{orderEntry.totalPrice}</p>
-        <button onClick={this.placeOrder}>
-          {orderEntry.side === "BUY" ? "Buy" : "Sell"}
-        </button>
-      </DashboardCard>
+      <OrderForm
+        instrument={instrument}
+        user={user}
+        onSubmit={() => onSubmit}
+      />
     );
+    //   <DashboardCard className={"orderEntry"}>
+    //     <div>
+    //       <button
+    //         name="side"
+    //         value="BUY"
+    //         onClick={this.handleOrderEntryChange}
+    //         className="buyBtn"
+    //       >
+    //         Buy
+    //       </button>
+    //       <button
+    //         name="side"
+    //         value="SELL"
+    //         onClick={this.handleOrderEntryChange}
+    //         className="sellBtn"
+    //       >
+    //         Sell
+    //       </button>
+    //     </div>
+    //     <p>Stock</p>
+    //     <p>Order type</p>
+    //     <select name="orderType" onChange={this.handleOrderEntryChange}>
+    //       <option name="orderTypeOption" value="Limit">
+    //         Limit
+    //       </option>
+    //       <option name="orderTypeOption" value="Market">
+    //         Market
+    //       </option>
+    //     </select>
+    //     <p>{orderEntry.side === "BUY" ? "Ask price" : "Bid price"}</p>
+    //     <p>{orderEntry.side === "BUY" ? lowestAskPrice : highestBidPrice}</p>
+    //     <p>Shares</p>
+    //     <input
+    //       name="shares"
+    //       placeholder="Number of shares"
+    //       onChange={this.handleOrderEntryChange}
+    //     />
+    //     <p>Price</p>
+    //     {orderEntry.orderType === "Limit" && (
+    //       <input
+    //         name="price"
+    //         placeholder="USDX"
+    //         onChange={this.handleOrderEntryChange}
+    //       />
+    //     )}
+    //     {orderEntry.orderType === "Market" &&
+    //       this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
+    //     <p>Estimated cost</p>
+    //     <p>{orderEntry.totalPrice}</p>
+    //     <button onClick={this.placeOrder}>
+    //       {orderEntry.side === "BUY" ? "Buy" : "Sell"}
+    //     </button>
+    //   </DashboardCard>
+    // );
   };
 
   renderMarketPriceInput = (askPrice, bidPrice) => {
@@ -1034,8 +1052,8 @@ class App extends Component {
     }
   };
 
-  placeOrder = async () => {
-    const { session, contracts, web3, orderEntry } = this.state;
+  placeOrder = async (orderEntry) => {
+    const { session, contracts, web3 } = this.state;
     // Helpers.
     const USDXToWei = (n) => web3.utils.toWei(n.toString(), "ether");
 
