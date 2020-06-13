@@ -5,14 +5,17 @@
       "constant": false,
       "inputs": [
         {
+          "internalType": "address",
           "name": "sender",
           "type": "address"
         },
         {
+          "internalType": "address",
           "name": "spender",
           "type": "address"
         },
         {
+          "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
         }
@@ -20,6 +23,7 @@
       "name": "approveFrom",
       "outputs": [
         {
+          "internalType": "bool",
           "name": "",
           "type": "bool"
         }
@@ -29,15 +33,15 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.8+commit.23d335f2\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"sender\",\"type\":\"address\"},{\"name\":\"spender\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approveFrom\",\"outputs\":[{\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the Approvable tokens to be approved from SC.\",\"methods\":{}},\"userdoc\":{\"methods\":{\"approveFrom(address,address,uint256)\":{\"notice\":\"Sets `amount` as the allowance of `spender` over the `sender`'s tokens.\"}}}},\"settings\":{\"compilationTarget\":{\"/Users/samyabouseda/Project/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol\":\"Approvable\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/samyabouseda/Project/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol\":{\"keccak256\":\"0xbcc8d36f36fdb9e426ed689f45f47e7a80c84855d4439fbda5e47b0f2070e3ee\",\"urls\":[\"bzzr://e12f84f564f49fcbe3b4a6faa23688da4874028a9272d29db9b059fcf9076b3a\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.16+commit.9c3226ce\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approveFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Interface of the Approvable tokens to be approved from SC.\",\"methods\":{}},\"userdoc\":{\"methods\":{\"approveFrom(address,address,uint256)\":{\"notice\":\"Sets `amount` as the allowance of `spender` over the `sender`'s tokens.\"}}}},\"settings\":{\"compilationTarget\":{\"/Users/samyabouseda/Desktop/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol\":\"Approvable\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/samyabouseda/Desktop/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol\":{\"keccak256\":\"0xbcc8d36f36fdb9e426ed689f45f47e7a80c84855d4439fbda5e47b0f2070e3ee\",\"urls\":[\"bzz-raw://29df753fe48811ec56a3ed7ad1e925f75199aaab71bf0b4db8c3e430c9df590e\",\"dweb:/ipfs/QmcTFcAKgMVfsJm2mmmWDrYJABKxvcyVb7xJSpKVBe1pge\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity ^0.5.0;\n\n/**\n * @dev Interface of the Approvable tokens to be approved from SC.\n */\ninterface Approvable {\n    /**\n     * Sets `amount` as the allowance of `spender` over the `sender`'s tokens.\n     */\n    function approveFrom(address sender, address spender, uint256 amount) external returns (bool);\n}\n",
-  "sourcePath": "/Users/samyabouseda/Project/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
+  "sourcePath": "/Users/samyabouseda/Desktop/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
   "ast": {
-    "absolutePath": "/Users/samyabouseda/Project/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
+    "absolutePath": "/Users/samyabouseda/Desktop/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
     "exportedSymbols": {
       "Approvable": [
         13
@@ -213,7 +217,7 @@
     "src": "0:319:0"
   },
   "legacyAST": {
-    "absolutePath": "/Users/samyabouseda/Project/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
+    "absolutePath": "/Users/samyabouseda/Desktop/DecentralizedTradingPlatform/dex-frontend/contracts/Approvable.sol",
     "exportedSymbols": {
       "Approvable": [
         13
@@ -390,11 +394,11 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.8+commit.23d335f2.Emscripten.clang"
+    "version": "0.5.16+commit.9c3226ce.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.11",
-  "updatedAt": "2019-08-06T10:45:12.277Z",
+  "schemaVersion": "3.0.23",
+  "updatedAt": "2020-06-13T07:24:18.217Z",
   "devdoc": {
     "details": "Interface of the Approvable tokens to be approved from SC.",
     "methods": {}

@@ -74,7 +74,7 @@ contract('StockICO', async accounts => {
 
         // DEX config
         this.matchingEngine = await accounts[9];
-        this.DEX = await DEX.new('0x4625382e88790b76E5bAD2e9c8E724211cDDd011', { from: this.matchingEngine });
+        this.DEX = await DEX.new('0x8FC9b674Aa37B879F6E9B096C8dB63f92d63A446', { from: this.matchingEngine });
     });
 
     describe('converters', function () {
@@ -250,7 +250,7 @@ contract('StockICO', async accounts => {
             );
 
             // Sign msg.
-            const MATCHING_ENGINE_PK = '0xc1cbe2100aed68260d5b8219d3a9e0441827ed52f047163b30c36348f00b8362';
+            const MATCHING_ENGINE_PK = 'fb1dfe2ec754c717d2c3226fada7e5cf24450eac999151674837e04f5395cf9b';
             let signatureObject = await web3.eth.accounts.sign(
                 "0x" + msg.toString("hex"),
                 MATCHING_ENGINE_PK
