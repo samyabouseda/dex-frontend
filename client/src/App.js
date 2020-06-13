@@ -79,6 +79,8 @@ class App extends Component {
       side: "BUY",
     },
     assetBalances: [],
+
+    currentPath: "",
   };
 
   componentDidMount = async () => {
@@ -386,13 +388,17 @@ class App extends Component {
         </LoggedInHeader>
         <Dashboard>
           <section>
+            {console.log(this.state.currentPath)}
             {this.renderOrderBook()}
             {this.renderPortfolio()}
             {this.renderOrderEntry()}
             {this.renderOrderHistory()}
             {this.renderDeposits()}
             {this.renderAccountInfo()}
-            <SideBar currentPath={"/dashboard"} />
+            <SideBar
+              currentPath={"/dashboard"}
+              setCurrentPath={(currentPath) => ({})}
+            />
           </section>
         </Dashboard>
       </div>

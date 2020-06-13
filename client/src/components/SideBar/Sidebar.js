@@ -3,22 +3,26 @@ import React from "react";
 import styles from "./SideBar.module.css";
 import { DashboardIcon, ProfileIcon } from "../../icons";
 
-const Sidebar = ({ currentPath }) => {
+const Sidebar = ({ currentPath, setCurrentPath }) => {
   return (
     <section className={styles.sidebar}>
       <div className={styles.icons}>
-        {/* <Link to="/dashboard"> */}
-        <DashboardIcon active={currentPath === "/dashboard"} />
-        {/* </Link> */}
+        <ClickableIcon onClick={setCurrentPath("/dashboard")}>
+          <DashboardIcon active={currentPath === "/dashboard"} />
+        </ClickableIcon>
       </div>
 
       <div className={styles.icons}>
-        {/* <Link to="/profile"> */}
-        <ProfileIcon active={currentPath === "/profile"} />
-        {/* </Link> */}
+        <ClickableIcon onClick={setCurrentPath("/profile")}>
+          <ProfileIcon active={currentPath === "/profile"} />
+        </ClickableIcon>
       </div>
     </section>
   );
 };
+
+const ClickableIcon = ({ onClick, children }) => (
+  <span onClick={() => onClick()}>{children}</span>
+);
 
 export default Sidebar;
