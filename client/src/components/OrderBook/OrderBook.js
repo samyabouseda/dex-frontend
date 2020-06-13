@@ -84,9 +84,10 @@ const _renderAsks = (asks) => (
 
 const _renderSpread = (highestBid, lowestAsk) => (
   <div className={styles["spread-container"]}>
+    {/* {console.log(highestBid, lowestAsk)} */}
     <p className={styles["spread-item"]}>Spread</p>
     <p className={styles["spread-item"]}>
-      ${Math.round((lowestAsk - highestBid) * 100) / 100}
+      ${Math.round((lowestAsk.ask - highestBid.bid) * 100) / 100}
     </p>
   </div>
 );

@@ -16,7 +16,9 @@ import Portfolio from "./components/Portfolio";
 import OrderBook from "./components/OrderBook/OrderBook";
 // import InstrumentSelect from "./components/InstrumentSelect";
 import OrderForm from "./components/OrderForm";
-
+import Button from "./components/Button";
+import SideBar from "./components/SideBar";
+import Input from "./components/Input";
 //
 
 const abi = require("ethereumjs-abi");
@@ -380,16 +382,17 @@ class App extends Component {
       <div>
         <LoggedInHeader>
           {/* <InstrumentSelect instruments={instruments} onSelect={onSelect} /> */}
+          {this.renderStocks(this.state.stockList)}
         </LoggedInHeader>
         <Dashboard>
-          {this.renderAccountInfo()}
           <section>
-            {this.renderPortfolio()}
             {this.renderOrderBook()}
-            {this.renderStockList()}
+            {this.renderPortfolio()}
             {this.renderOrderEntry()}
             {this.renderOrderHistory()}
             {this.renderDeposits()}
+            {this.renderAccountInfo()}
+            <SideBar currentPath={"/dashboard"} />
           </section>
         </Dashboard>
       </div>
@@ -398,10 +401,12 @@ class App extends Component {
 
   renderAccountInfo = () => {
     return (
-      <DashboardCard>
+      <DashboardCard title="Profile">
         <p>Account name: {this.state.accountName}</p>
         <p>Account address: {this.state.accountAddress}</p>
-        <button onClick={this.handleLoggout}>Logout</button>
+        <Button color="error" onClick={this.handleLoggout}>
+          Logout
+        </Button>
       </DashboardCard>
     );
   };
@@ -409,54 +414,7 @@ class App extends Component {
   renderDeposits = () => {
     const { assetBalances } = this.state;
     return (
-      <DashboardCard>
-        <h3>Balances</h3>
-        <section>
-          <div>
-            <button onClick={this.getEther}>Get Ether</button>
-          </div>
-
-          <div>
-            <input
-              type="text"
-              name="fiatToBuy"
-              placeholder="Amount in USDX"
-              onChange={this.handleFiatInputChange}
-            />
-            <button onClick={this.buyFiat}>Buy fiat</button>
-          </div>
-
-          <div>
-            {/*<p>Stock should only be sold through IPO/ICO. This if for demo purposes.</p>*/}
-            <input
-              type="text"
-              name="stockToBuy"
-              placeholder="Amount in USDX"
-              onChange={this.handleStockInputChange}
-            />
-            <button onClick={this.buyStock}>Buy stock</button>
-          </div>
-
-          <div>
-            <input
-              type="text"
-              name="fiatDeposit"
-              placeholder="Amount in USDX"
-              onChange={this.handleDepositInputChange}
-            />
-            <button onClick={this.deposit}>Deposit USDX</button>
-          </div>
-
-          <div>
-            <input
-              type="text"
-              name="aaplDeposit"
-              placeholder="Amount in shares"
-              onChange={this.handleAAPLDepositInputChange}
-            />
-            <button onClick={this.depositAAPL}>Deposit AAPL</button>
-          </div>
-        </section>
+      <DashboardCard title="deposits">
         <div>
           <table>
             <tbody>
@@ -470,6 +428,52 @@ class App extends Component {
             <tbody>{this.renderBalances(assetBalances)}</tbody>
           </table>
         </div>
+        <section>
+          <input
+            type="text"
+            name="fiatToBuy"
+            placeholder="Amount in USDX"
+            onChange={this.handleFiatInputChange}
+          />
+          <Button color="success" onClick={this.buyFiat}>
+            Purchase Fiat
+          </Button>
+
+          <div>
+            {/*<p>Stock should only be sold through IPO/ICO. This if for demo purposes.</p>*/}
+            <input
+              type="text"
+              name="stockToBuy"
+              placeholder="Amount in USDX"
+              onChange={this.handleStockInputChange}
+            />
+            <Button color="success" onClick={this.buyStock}>
+              Purchase Stock
+            </Button>
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="fiatDeposit"
+              placeholder="Amount in USDX"
+              onChange={this.handleDepositInputChange}
+            />
+            <Button color="success" onClick={this.deposit}>
+              Deposit USDX
+            </Button>
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="aaplDeposit"
+              placeholder="Amount in shares"
+              onChange={this.handleAAPLDepositInputChange}
+            />
+            <button onClick={this.depositAAPL}>Deposit AAPL</button>
+          </div>
+        </section>
       </DashboardCard>
     );
   };
@@ -522,68 +526,52 @@ class App extends Component {
       lowestBid: highestBidPrice,
     };
     const user = {};
-    const onSubmit = this.placeOrder;
     return (
-      <OrderForm
-        instrument={instrument}
-        user={user}
-        onSubmit={() => onSubmit}
-      />
+      <DashboardCard title="Order Form">
+        <div>
+          <button
+            name="side"
+            value="BUY"
+            onClick={this.handleOrderEntryChange}
+            color="success"
+          >
+            Buy
+          </button>
+          <button
+            name="side"
+            value="SELL"
+            onClick={this.handleOrderEntryChange}
+            color="error"
+          >
+            Sell
+          </button>
+        </div>
+        <p>Stock</p>
+        <p>{orderEntry.side === "BUY" ? "Ask price" : "Bid price"}</p>
+        <p>{orderEntry.side === "BUY" ? lowestAskPrice : highestBidPrice}</p>
+        <p>Shares</p>
+        <input
+          name="shares"
+          placeholder="Number of shares"
+          onChange={this.handleOrderEntryChange}
+        />
+        <p>Price</p>
+        {orderEntry.orderType === "Limit" && (
+          <input
+            name="price"
+            placeholder="USDX"
+            onChange={this.handleOrderEntryChange}
+          />
+        )}
+        {orderEntry.orderType === "Market" &&
+          this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
+        <p>Estimated cost</p>
+        <p>{orderEntry.totalPrice}</p>
+        <button onClick={this.placeOrder}>
+          {orderEntry.side === "BUY" ? "Buy" : "Sell"}
+        </button>
+      </DashboardCard>
     );
-    //   <DashboardCard className={"orderEntry"}>
-    //     <div>
-    //       <button
-    //         name="side"
-    //         value="BUY"
-    //         onClick={this.handleOrderEntryChange}
-    //         className="buyBtn"
-    //       >
-    //         Buy
-    //       </button>
-    //       <button
-    //         name="side"
-    //         value="SELL"
-    //         onClick={this.handleOrderEntryChange}
-    //         className="sellBtn"
-    //       >
-    //         Sell
-    //       </button>
-    //     </div>
-    //     <p>Stock</p>
-    //     <p>Order type</p>
-    //     <select name="orderType" onChange={this.handleOrderEntryChange}>
-    //       <option name="orderTypeOption" value="Limit">
-    //         Limit
-    //       </option>
-    //       <option name="orderTypeOption" value="Market">
-    //         Market
-    //       </option>
-    //     </select>
-    //     <p>{orderEntry.side === "BUY" ? "Ask price" : "Bid price"}</p>
-    //     <p>{orderEntry.side === "BUY" ? lowestAskPrice : highestBidPrice}</p>
-    //     <p>Shares</p>
-    //     <input
-    //       name="shares"
-    //       placeholder="Number of shares"
-    //       onChange={this.handleOrderEntryChange}
-    //     />
-    //     <p>Price</p>
-    //     {orderEntry.orderType === "Limit" && (
-    //       <input
-    //         name="price"
-    //         placeholder="USDX"
-    //         onChange={this.handleOrderEntryChange}
-    //       />
-    //     )}
-    //     {orderEntry.orderType === "Market" &&
-    //       this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
-    //     <p>Estimated cost</p>
-    //     <p>{orderEntry.totalPrice}</p>
-    //     <button onClick={this.placeOrder}>
-    //       {orderEntry.side === "BUY" ? "Buy" : "Sell"}
-    //     </button>
-    //   </DashboardCard>
-    // );
   };
 
   renderMarketPriceInput = (askPrice, bidPrice) => {
@@ -637,8 +625,7 @@ class App extends Component {
   renderOrderHistory = () => {
     const { orders } = this.state;
     return (
-      <DashboardCard>
-        <h3>Order History</h3>
+      <DashboardCard title="Order history">
         <table>
           <tbody>
             <tr>
@@ -694,26 +681,25 @@ class App extends Component {
     }
   };
 
-  renderStockList = () => {
-    const { stockList } = this.state;
-    return (
-      <DashboardCard>
-        <h3>Stock List</h3>
-        <table>
-          <tbody>
-            <tr>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Bid</th>
-              <th>Ask</th>
-            </tr>
-          </tbody>
-          <tbody>{this.renderStocks(stockList)}</tbody>
-        </table>
-      </DashboardCard>
-    );
-  };
+  //   renderStockList = () => {
+  //     const { stockList } = this.state;
+  //     return (
+  //       <DashboardCard title="stock list">
+  //         <table>
+  //           <tbody>
+  //             <tr>
+  //               <th>Symbol</th>
+  //               <th>Name</th>
+  //               <th>Price</th>
+  //               <th>Bid</th>
+  //               <th>Ask</th>
+  //             </tr>
+  //           </tbody>
+  //           <tbody>{this.renderStocks(stockList)}</tbody>
+  //         </table>
+  //       </DashboardCard>
+  //     );
+  //   };
 
   renderStocks = (stocks) => {
     return stocks.map((stock, key) => {
@@ -1052,8 +1038,8 @@ class App extends Component {
     }
   };
 
-  placeOrder = async (orderEntry) => {
-    const { session, contracts, web3 } = this.state;
+  placeOrder = async () => {
+    const { session, contracts, web3, orderEntry } = this.state;
     // Helpers.
     const USDXToWei = (n) => web3.utils.toWei(n.toString(), "ether");
 
