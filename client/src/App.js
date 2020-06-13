@@ -13,6 +13,7 @@ import Dashboard from "./components/Dashboard";
 import LoggedInHeader from "./components/LoggedInHeader";
 import DashboardCard from "./components/DashboardCard";
 import Portfolio from "./components/Portfolio";
+import OrderBook from "./components/OrderBook/OrderBook";
 
 //
 
@@ -377,9 +378,9 @@ class App extends Component {
         <Dashboard>
           {this.renderAccountInfo()}
           <section>
+            {this.renderPortfolio()}
             {this.renderDeposits()}
             {this.renderStockList()}
-            {this.renderPortfolio()}
             {this.renderOrderEntry()}
             {this.renderOrderBook()}
             {this.renderOrderHistory()}
@@ -506,28 +507,12 @@ class App extends Component {
     return <Portfolio user={user} />;
   };
 
-  renderAssets = (assets) =>
-    assets.map((asset, key) => this.renderAsset(asset, key));
-
-  renderAsset = (asset, key) => {
-    return (
-      <tr key={key}>
-        <td>{asset.symbol}</td>
-        <td>{asset.name}</td>
-        <td>{asset.balanceOf}</td>
-        <td>{asset.price}</td>
-        <td>{asset.price * asset.balanceOf}</td>
-      </tr>
-    );
-  };
-
   renderOrderEntry = () => {
     const { orderEntry, lowestAsk, highestBid } = this.state;
     let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
     let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
     return (
       <DashboardCard className={"orderEntry"}>
-        <p>Order entry</p>
         <div>
           <button
             name="side"
@@ -727,14 +712,25 @@ class App extends Component {
   };
 
   renderOrderBook = () => {
+    const bids = this.state.bids.map((bid) => ({
+      ...bid,
+      volume: bid.size,
+      limitPrice: bid.bid,
+    }));
+    const asks = this.state.asks.map((ask) => ({
+      ...ask,
+      volume: ask.size,
+      limitPrice: ask.ask,
+    }));
+    const highestAsk = this.state.highestBid;
+    const lowestBid = this.state.lowestAsk;
     return (
-      <DashboardCard>
-        <h3>Order Book AAPL/USDX</h3>
-        <section className="ob">
-          {this.renderBidTable()}
-          {this.renderAskTable()}
-        </section>
-      </DashboardCard>
+      <OrderBook
+        bids={bids}
+        asks={asks}
+        highestAsk={highestAsk}
+        lowestBid={lowestBid}
+      />
     );
   };
 
