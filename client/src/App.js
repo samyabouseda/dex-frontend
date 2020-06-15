@@ -1,12 +1,12 @@
-import React, { Component } from "react";
+import React, { Component, useState } from "react";
 import FiatCrowdsale from "./contracts/FiatCrowdsale";
 import Fiat from "./contracts/Fiat";
 import Stock from "./contracts/Stock";
 import StockICO from "./contracts/StockICO";
 import DEX from "./contracts/DEX";
 import getWeb3 from "./utils/getWeb3";
-import "./App.css";
 import axios from "axios";
+import styles from "./App.module.css";
 
 // V2
 import Dashboard from "./components/Dashboard";
@@ -528,18 +528,19 @@ class App extends Component {
     let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
     let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
     const instrument = {
+      name: "Apple Computer Inc.",
       highestAsk: lowestAskPrice,
       lowestBid: highestBidPrice,
     };
     const user = {};
     return (
       <DashboardCard title="Order Form">
-        <div>
+        <div style={{ textAlign: "center" }}>
           <button
             name="side"
             value="BUY"
             onClick={this.handleOrderEntryChange}
-            color="success"
+            style={buttonStyle("success")}
           >
             Buy
           </button>
@@ -547,34 +548,46 @@ class App extends Component {
             name="side"
             value="SELL"
             onClick={this.handleOrderEntryChange}
-            color="error"
+            style={buttonStyle("error")}
           >
             Sell
           </button>
         </div>
-        <p>Stock</p>
-        <p>{orderEntry.side === "BUY" ? "Ask price" : "Bid price"}</p>
-        <p>{orderEntry.side === "BUY" ? lowestAskPrice : highestBidPrice}</p>
-        <p>Shares</p>
-        <input
-          name="shares"
-          placeholder="Number of shares"
-          onChange={this.handleOrderEntryChange}
+        <Info
+          instrument={instrument}
+          marketSideIsBuy={orderEntry.side === "BUY"}
         />
-        <p>Price</p>
+        <StyledInput
+          label="Number of shares"
+          name="number-of-shares"
+          placeholder="100"
+          onChange={this.handleOrderEntryChange}
+          type="text"
+        />
         {orderEntry.orderType === "Limit" && (
-          <input
-            name="price"
+          <StyledInput
+            label="Price per share"
+            name="price-pre-share"
             placeholder="USDX"
+            type="text"
             onChange={this.handleOrderEntryChange}
           />
         )}
-        {orderEntry.orderType === "Market" &&
-          this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
-        <p>Estimated cost</p>
-        <p>{orderEntry.totalPrice}</p>
-        <button onClick={this.placeOrder}>
-          {orderEntry.side === "BUY" ? "Buy" : "Sell"}
+
+        <StyledInput
+          label="Total price"
+          name="total-price"
+          placeholder=""
+          type="text"
+          readOnly={true}
+          value={orderEntry.totalPrice}
+        />
+
+        <button
+          onClick={this.placeOrder}
+          style={buttonStyle(orderEntry.side === "BUY" ? "success" : "error")}
+        >
+          {orderEntry.side === "BUY" ? "Buy Assets" : "Sell Assets"}
         </button>
       </DashboardCard>
     );
@@ -607,6 +620,7 @@ class App extends Component {
     const { orderEntry, highestBid, lowestAsk } = this.state;
     const name = event.target.name;
     const value = event.target.value;
+    console.log(value);
     orderEntry[name] = value;
     orderEntry.totalPrice = this.calcEstimatedCost();
     if (
@@ -619,7 +633,7 @@ class App extends Component {
         orderEntry.price = highestBid.bid;
       }
     }
-    console.log(orderEntry);
+    // console.log(orderEntry);
     this.setState({ orderEntry });
   };
 
@@ -686,26 +700,6 @@ class App extends Component {
       console.log(error);
     }
   };
-
-  //   renderStockList = () => {
-  //     const { stockList } = this.state;
-  //     return (
-  //       <DashboardCard title="stock list">
-  //         <table>
-  //           <tbody>
-  //             <tr>
-  //               <th>Symbol</th>
-  //               <th>Name</th>
-  //               <th>Price</th>
-  //               <th>Bid</th>
-  //               <th>Ask</th>
-  //             </tr>
-  //           </tbody>
-  //           <tbody>{this.renderStocks(stockList)}</tbody>
-  //         </table>
-  //       </DashboardCard>
-  //     );
-  //   };
 
   renderStocks = (stocks) => {
     return stocks.map((stock, key) => {
@@ -1206,6 +1200,73 @@ class App extends Component {
     });
     console.log(res);
   };
+}
+
+const buttonStyle = (color) => ({
+  color: "#ffffff",
+  backgroundColor: color === "success" ? "#60CF8C" : "#C34A3E",
+  borderRadius: "6px",
+  border: "none",
+  padding: "0.8em 4.25em",
+  fontSize: "14px",
+  fontWeight: 900,
+  letterSpacing: "0.54px",
+  lineHeight: "19px",
+  textAlign: "center",
+  margin: "1em",
+  cursor: "pointer",
+});
+
+const Info = ({ instrument, marketSideIsBuy }) => (
+  <div className={styles.info}>
+    <div>
+      <p className={styles.title}>{instrument.name}</p>
+      <p className={styles["sub-title"]}>Selected asset</p>
+    </div>
+    <div>
+      <p className={styles.title}>
+        ${marketSideIsBuy ? instrument.highestAsk : instrument.lowestBid}
+      </p>
+      <p className={styles["sub-title"]}>Price per share</p>
+    </div>
+  </div>
+);
+
+class StyledInput extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: this.props.value,
+    };
+
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(e) {
+    this.setState({ value: e.target.value });
+    const { onChange } = this.props;
+    if (onChange) onChange(e);
+  }
+
+  render() {
+    const { name, label, readOnly = false, placeholder, type } = this.props;
+    return (
+      <fieldset className={styles.fieldset}>
+        <label className={styles.label} htmlFor={name}>
+          {label}
+        </label>
+        <input
+          readOnly={readOnly}
+          name={name}
+          type={type}
+          value={this.state.value}
+          placeholder={placeholder}
+          className={styles.input}
+          onChange={this.handleChange}
+        />
+      </fieldset>
+    );
+  }
 }
 
 export default App;

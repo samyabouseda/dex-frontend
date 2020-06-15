@@ -17,7 +17,7 @@ const Portfolio = ({ user }) => {
 
 const _renderAssets = (assets) => (
   <Table>
-    <TableHeader headers={["Asset", "Qty.", "Price", "Total"]} />
+    <TableHeader headers={["Asset", "Qty.", "Price", "Total ($)"]} />
     {assets.map((asset, key) => (
       <TableRow
         key={key}
