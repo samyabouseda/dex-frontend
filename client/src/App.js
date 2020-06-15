@@ -395,7 +395,9 @@ class App extends Component {
   };
 
   renderProfileHead = () => (
-    <p style={{ fontWeight: "bold", margin: 0 }}>Profile</p>
+    <p style={{ fontWeight: "bold", margin: 0, paddingLeft: "0.7em" }}>
+      Profile
+    </p>
   );
 
   renderUIforLoggedUser = () => {
@@ -807,13 +809,18 @@ class App extends Component {
   renderStocks = (stocks) => {
     return stocks.map((stock, key) => {
       return (
-        <tr key={key}>
-          <td>{stock.symbol}</td>
-          <td>{stock.name}</td>
-          <td>{this.state.lowestAsk.ask}</td>
-          <td>{this.state.highestBid.bid}</td>
-          <td>{this.state.lowestAsk.ask}</td>
-        </tr>
+        <>
+          <p style={{ fontWeight: "bold", margin: 0, paddingLeft: "0.5em" }}>
+            <tr key={key}>
+              {/* <td>{stock.symbol}</td> */}
+              <td>{stock.name}</td>
+              {/* <td>{this.state.lowestAsk.ask}</td>
+            <td>{this.state.highestBid.bid}</td>
+            <td>{this.state.lowestAsk.ask}</td> */}
+            </tr>
+          </p>
+          <p className={styles.selectAsset}>Selected asset</p>
+        </>
       );
     });
   };

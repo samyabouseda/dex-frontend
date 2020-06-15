@@ -142,3 +142,12 @@
   text-align: left;
   margin-top: 0;
 }
+
+.selectAsset {
+  height: 0;
+  padding: 0 0.7em;
+  color: gray;
+  font-weight: bold;
+  font-size: 0.8em;
+  margin: 0 0 1em;
+}
