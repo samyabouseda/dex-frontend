@@ -5,7 +5,15 @@ import Table, { TableHeader, TableRow } from "../Table";
 
 const Portfolio = ({ user }) => {
   return (
-    <DashboardCard title={"Portfolio"}>
+    <DashboardCard
+      title={"Portfolio"}
+      gridStyle={{
+        gridColumnStart: 3,
+        gridColumnEnd: 5,
+        gridRowStart: 1,
+        gridRowEnd: 2,
+      }}
+    >
       <header className={styles.header}>
         <h2 className={styles.header__total}>${user.totalDeposited}</h2>
         <p className={styles.label}>Total owned</p>

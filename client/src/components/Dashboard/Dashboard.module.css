@@ -1,8 +1,7 @@
 .dashboard {
-    padding: 2em;
-    margin-left: calc(.875em + 4em);
-    height: 100%;
-    display: grid;
-    grid-template-columns: auto auto auto auto;
+  padding: 2em;
+  margin-left: calc(0.875em + 4em);
+  height: 100%;
+  display: grid;
+  grid-template-columns: auto auto auto auto;
 }
-

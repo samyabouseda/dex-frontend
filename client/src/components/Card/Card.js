@@ -1,8 +1,12 @@
-import React from 'react'
-import styles from './Card.module.css'
+import React from "react";
+import styles from "./Card.module.css";
 
-const Card = ({ children }) => {
-	return <div className={styles.card}>{children}</div>
-}
+const Card = ({ children, flex }) => {
+  return (
+    <div className={styles.card} style={{ flex: flex }}>
+      {children}
+    </div>
+  );
+};
 
-export default Card
+export default Card;

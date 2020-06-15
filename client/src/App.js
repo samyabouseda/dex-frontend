@@ -19,6 +19,7 @@ import OrderForm from "./components/OrderForm";
 import Button from "./components/Button";
 import SideBar from "./components/SideBar";
 import Input from "./components/Input";
+import { LoggedOutHeader, Card } from "./components";
 //
 
 const abi = require("ethereumjs-abi");
@@ -80,7 +81,7 @@ class App extends Component {
     },
     assetBalances: [],
 
-    currentPath: "",
+    currentPath: "/dashboard",
   };
 
   componentDidMount = async () => {
@@ -266,44 +267,60 @@ class App extends Component {
   renderUIforLoggedOutUser = () => {
     return (
       <div>
-        <h2>Account creation</h2>
-        <form onSubmit={this.createAccount}>
-          <p>{this.state.accountNameError}</p>
-          <input
-            type="text"
-            name="accountName"
-            placeholder="Account name"
-            onChange={this.handleAccountFormChange}
-          />
-          <input
-            type="password"
-            name="accountPassword"
-            placeholder="password"
-            onChange={this.handleAccountFormChange}
-          />
-          <button type="submit" name="createAccountButton">
-            Create account
-          </button>
-        </form>
-
-        <h2>Login</h2>
-        <form onSubmit={this.handleLogin}>
-          <input
-            type="text"
-            name="accountName"
-            placeholder="Account name"
-            onChange={this.handleAccountFormChange}
-          />
-          <input
-            type="password"
-            name="accountPassword"
-            placeholder="password"
-            onChange={this.handleAccountFormChange}
-          />
-          <button type="submit" name="loginButton">
-            Login
-          </button>
-        </form>
+        <LoggedOutHeader />
+        <div className={styles["signup-screen"]}>
+          <Card flex={1}>
+            <p className={styles.title}>SIGNUP</p>
+            <p className={styles.guidelines}>
+              Fill in the form to create your account.
+            </p>
+            <form onSubmit={this.createAccount}>
+              <p>{this.state.accountNameError}</p>
+              <StyledInput
+                label="Username"
+                type="text"
+                name="accountName"
+                placeholder="Account name"
+                onChange={this.handleAccountFormChange}
+              />
+              <StyledInput
+                label="Password"
+                type="password"
+                name="accountPassword"
+                placeholder="password"
+                onChange={this.handleAccountFormChange}
+              />
+              <Button color="primary" type="submit" name="createAccountButton">
+                Create account
+              </Button>
+            </form>
+          </Card>
+          <Card flex={1}>
+            <p className={styles.title}>LOGIN</p>
+            <p className={styles.guidelines}>
+              Fill in the form to access your account.
+            </p>
+            <form onSubmit={this.handleLogin}>
+              <StyledInput
+                label="Username"
+                type="text"
+                name="accountName"
+                placeholder="Account name"
+                onChange={this.handleAccountFormChange}
+              />
+              <StyledInput
+                label="Password"
+                type="password"
+                name="accountPassword"
+                placeholder="password"
+                onChange={this.handleAccountFormChange}
+              />
+              <Button color="primary" type="submit" name="loginButton">
+                Login
+              </Button>
+            </form>
+          </Card>
+        </div>
       </div>
     );
   };
@@ -377,6 +394,10 @@ class App extends Component {
     });
   };
 
+  renderProfileHead = () => (
+    <p style={{ fontWeight: "bold", margin: 0 }}>Profile</p>
+  );
+
   renderUIforLoggedUser = () => {
     const instruments = [];
     const onSelect = () => ({});
@@ -384,30 +405,45 @@ class App extends Component {
       <div>
         <LoggedInHeader>
           {/* <InstrumentSelect instruments={instruments} onSelect={onSelect} /> */}
-          {this.renderStocks(this.state.stockList)}
+          {this.state.currentPath === "/profile"
+            ? this.renderProfileHead()
+            : this.renderStocks(this.state.stockList)}
         </LoggedInHeader>
         <Dashboard>
-          <section>
-            {console.log(this.state.currentPath)}
-            {this.renderOrderBook()}
-            {this.renderPortfolio()}
-            {this.renderOrderEntry()}
-            {this.renderOrderHistory()}
-            {this.renderDeposits()}
-            {this.renderAccountInfo()}
-            <SideBar
-              currentPath={"/dashboard"}
-              setCurrentPath={(currentPath) => ({})}
-            />
-          </section>
+          {console.log(this.state.currentPath)}
+          {this.state.currentPath === "/dashboard" && (
+            <>
+              {this.renderOrderBook()}
+              {this.renderOrderEntry()}
+              {this.renderPortfolio()}
+              {this.renderOrderHistory()}
+            </>
+          )}
+          {this.state.currentPath === "/profile" && (
+            <>
+              {this.renderDeposits()}
+              {this.renderAccountInfo()}
+            </>
+          )}
+          <SideBar
+            currentPath={this.state.currentPath}
+            setPath={this.handlePathChange}
+          />
         </Dashboard>
       </div>
     );
   };
 
+  handlePathChange = (newPath) => {
+    this.setState({ currentPath: newPath });
+  };
+
   renderAccountInfo = () => {
     return (
-      <DashboardCard title="Profile">
+      <DashboardCard
+        title="Profile information"
+        gridStyle={{ gridRowStart: 3 }}
+      >
         <p>Account name: {this.state.accountName}</p>
         <p>Account address: {this.state.accountAddress}</p>
         <Button color="error" onClick={this.handleLoggout}>
@@ -420,7 +456,7 @@ class App extends Component {
   renderDeposits = () => {
     const { assetBalances } = this.state;
     return (
-      <DashboardCard title="deposits">
+      <DashboardCard title="deposits" gridStyle={{ gridRowStart: 3 }}>
         <div>
           <table>
             <tbody>
@@ -435,19 +471,22 @@ class App extends Component {
           </table>
         </div>
         <section>
-          <input
-            type="text"
-            name="fiatToBuy"
-            placeholder="Amount in USDX"
-            onChange={this.handleFiatInputChange}
-          />
-          <Button color="success" onClick={this.buyFiat}>
-            Purchase Fiat
-          </Button>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <StyledInput
+              label="Fiat purchase"
+              type="text"
+              name="fiatToBuy"
+              placeholder="Amount in USDX"
+              onChange={this.handleFiatInputChange}
+            />
+            <Button color="success" onClick={this.buyFiat}>
+              Purchase Fiat
+            </Button>
+          </div>
 
-          <div>
-            {/*<p>Stock should only be sold through IPO/ICO. This if for demo purposes.</p>*/}
-            <input
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <StyledInput
+              label="Stock purchase"
               type="text"
               name="stockToBuy"
               placeholder="Amount in USDX"
@@ -458,8 +497,9 @@ class App extends Component {
             </Button>
           </div>
 
-          <div>
-            <input
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <StyledInput
+              label="Fiat deposit"
               type="text"
               name="fiatDeposit"
               placeholder="Amount in USDX"
@@ -470,14 +510,17 @@ class App extends Component {
             </Button>
           </div>
 
-          <div>
-            <input
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <StyledInput
+              label="Stock deposit"
               type="text"
               name="aaplDeposit"
               placeholder="Amount in shares"
               onChange={this.handleAAPLDepositInputChange}
             />
-            <button onClick={this.depositAAPL}>Deposit AAPL</button>
+            <Button color="success" onClick={this.depositAAPL}>
+              Deposit AAPL
+            </Button>
           </div>
         </section>
       </DashboardCard>
@@ -588,7 +631,10 @@ class App extends Component {
     };
     const user = {};
     return (
-      <DashboardCard title="Order Form">
+      <DashboardCard
+        title="Order Form"
+        gridStyle={{ gridColumnStart: 2, gridColumnEnd: 3, gridRowStart: 1 }}
+      >
         <div style={{ textAlign: "center" }}>
           <button
             name="side"
@@ -606,42 +652,43 @@ class App extends Component {
           >
             Sell
           </button>
-        </div>
-        <Info
-          instrument={instrument}
-          marketSideIsBuy={orderEntry.side === "BUY"}
-        />
-        <StyledInput
-          label="Number of shares"
-          name="shares"
-          placeholder="100"
-          onChange={this.handleOrderEntryChange}
-          type="text"
-        />
-        {orderEntry.orderType === "Limit" && (
-          <StyledInput
-            label="Price per share"
-            name="price"
-            placeholder="USDX"
-            type="text"
-            onChange={this.handleOrderEntryChange}
+
+          <Info
+            instrument={instrument}
+            marketSideIsBuy={orderEntry.side === "BUY"}
           />
-        )}
+          <StyledInput
+            label="Number of shares"
+            name="shares"
+            placeholder="100"
+            onChange={this.handleOrderEntryChange}
+            type="text"
+          />
+          {orderEntry.orderType === "Limit" && (
+            <StyledInput
+              label="Price per share"
+              name="price"
+              placeholder="USDX"
+              type="text"
+              onChange={this.handleOrderEntryChange}
+            />
+          )}
 
-        <div
-          className={styles.input}
-          style={{ display: "flex", justifyContent: "space-between" }}
-        >
-          <p style={{ fontWeight: 400 }}>Total price</p>
-          <p>$ {orderEntry.totalPrice}</p>
+          <div
+            className={styles.input}
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
+            <p style={{ fontWeight: 400 }}>Total price</p>
+            <p>$ {orderEntry.totalPrice}</p>
+          </div>
+
+          <button
+            onClick={this.placeOrder}
+            style={buttonStyle(orderEntry.side === "BUY" ? "success" : "error")}
+          >
+            {orderEntry.side === "BUY" ? "Buy Assets" : "Sell Assets"}
+          </button>
         </div>
-
-        <button
-          onClick={this.placeOrder}
-          style={buttonStyle(orderEntry.side === "BUY" ? "success" : "error")}
-        >
-          {orderEntry.side === "BUY" ? "Buy Assets" : "Sell Assets"}
-        </button>
       </DashboardCard>
     );
   };
@@ -698,7 +745,10 @@ class App extends Component {
   renderOrderHistory = () => {
     const { orders } = this.state;
     return (
-      <DashboardCard title="Order history">
+      <DashboardCard
+        title="Order history"
+        gridStyle={{ gridRowStart: 2, gridColumnStart: 2, gridColumnEnd: 4 }}
+      >
         <table>
           <tbody>
             <tr>

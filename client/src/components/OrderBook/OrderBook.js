@@ -42,7 +42,10 @@ const OrderBook = ({
   // }, 5000)
 
   return (
-    <DashboardCard title={"Order Book"}>
+    <DashboardCard
+      title={"Order Book"}
+      gridStyle={{ gridRow: "1/2", gridColumn: "1/2" }}
+    >
       {_renderBids(bids)}
       {_renderSpread(highestAsk, lowestBid)}
       {_renderAsks(asks)}
