@@ -523,6 +523,60 @@ class App extends Component {
     return <Portfolio user={user} />;
   };
 
+  renderOrderEntryV1 = () => {
+    const { orderEntry, lowestAsk, highestBid } = this.state;
+    let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
+    let highestBidPrice = highestBid !== null ? highestBid.bid : 0;
+    const instrument = {
+      highestAsk: lowestAskPrice,
+      lowestBid: highestBidPrice,
+    };
+    const user = {};
+    return (
+      <DashboardCard title="Order Form">
+        <div>
+          <button
+            name="side"
+            value="BUY"
+            onClick={this.handleOrderEntryChange}
+            color="success"
+          >
+            Buy
+          </button>
+          <button
+            name="side"
+            value="SELL"
+            onClick={this.handleOrderEntryChange}
+            color="error"
+          >
+            Sell
+          </button>
+        </div>
+        <p>Shares</p>
+        <input
+          name="shares"
+          placeholder="Number of shares"
+          onChange={this.handleOrderEntryChange}
+        />
+        <p>Price</p>
+        {orderEntry.orderType === "Limit" && (
+          <input
+            name="price"
+            placeholder="USDX"
+            onChange={this.handleOrderEntryChange}
+          />
+        )}
+        {orderEntry.orderType === "Market" &&
+          this.renderMarketPriceInput(lowestAskPrice, highestBidPrice)}
+        <p>Estimated cost</p>
+        <p>{orderEntry.totalPrice}</p>
+        <button onClick={this.placeOrder}>
+          {orderEntry.side === "BUY" ? "Buy" : "Sell"}
+        </button>
+      </DashboardCard>
+    );
+  };
+
   renderOrderEntry = () => {
     const { orderEntry, lowestAsk, highestBid } = this.state;
     let lowestAskPrice = lowestAsk !== null ? lowestAsk.ask : 0;
@@ -567,21 +621,20 @@ class App extends Component {
         {orderEntry.orderType === "Limit" && (
           <StyledInput
             label="Price per share"
-            name="price-pre-share"
+            name="price"
             placeholder="USDX"
             type="text"
             onChange={this.handleOrderEntryChange}
           />
         )}
 
-        <StyledInput
-          label="Total price"
-          name="total-price"
-          placeholder=""
-          type="text"
-          readOnly={true}
-          value={orderEntry.totalPrice}
-        />
+        <div
+          className={styles.input}
+          style={{ display: "flex", justifyContent: "space-between" }}
+        >
+          <p style={{ fontWeight: 400 }}>Total price</p>
+          <p>$ {orderEntry.totalPrice}</p>
+        </div>
 
         <button
           onClick={this.placeOrder}
@@ -633,7 +686,7 @@ class App extends Component {
         orderEntry.price = highestBid.bid;
       }
     }
-    // console.log(orderEntry);
+    console.log(orderEntry);
     this.setState({ orderEntry });
   };
 
