@@ -559,7 +559,7 @@ class App extends Component {
         />
         <StyledInput
           label="Number of shares"
-          name="number-of-shares"
+          name="shares"
           placeholder="100"
           onChange={this.handleOrderEntryChange}
           type="text"
