@@ -20,6 +20,7 @@ import Button from "./components/Button";
 import SideBar from "./components/SideBar";
 import Input from "./components/Input";
 import { LoggedOutHeader, Card } from "./components";
+import Table, { TableHeader, TableRow } from "./components/Table";
 //
 
 const abi = require("ethereumjs-abi");
@@ -446,8 +447,13 @@ class App extends Component {
         title="Profile information"
         gridStyle={{ gridRowStart: 3 }}
       >
-        <p>Account name: {this.state.accountName}</p>
-        <p>Account address: {this.state.accountAddress}</p>
+        <p className={styles["title"]}>
+          Account name: {this.state.accountName}
+        </p>
+        <br />
+        <p className={styles["title"]}>
+          Account address: {this.state.accountAddress}
+        </p>
         <Button color="error" onClick={this.handleLoggout}>
           Logout
         </Button>
@@ -460,17 +466,10 @@ class App extends Component {
     return (
       <DashboardCard title="deposits" gridStyle={{ gridRowStart: 3 }}>
         <div>
-          <table>
-            <tbody>
-              <tr>
-                <th>Symbol</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </tbody>
-            <tbody>{this.renderBalances(assetBalances)}</tbody>
-          </table>
+          <Table>
+            <TableHeader headers={["Symbol", "Qty", "Price", "Total ($)"]} />
+            {this.renderBalances(assetBalances)}
+          </Table>
         </div>
         <section>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -533,12 +532,21 @@ class App extends Component {
     return assets.map((asset, key) => {
       let price = this.getAssetPrice(asset.asset.symbol);
       return (
-        <tr key={key}>
-          <td>{asset.asset.symbol}</td>
-          <td>{asset.asset.amount}</td>
-          <td>{price}</td>
-          <td>{asset.asset.amount * price}</td>
-        </tr>
+        <TableRow
+          key={key}
+          valuesForEachColumn={[
+            asset.asset.symbol,
+            asset.asset.amount,
+            price,
+            asset.asset.amount * price,
+          ]}
+        />
+        // <tr key={key}>
+        //   <td>{asset.asset.symbol}</td>
+        //   <td>{asset.asset.amount}</td>
+        //   <td>{price}</td>
+        //   <td>{asset.asset.amount * price}</td>
+        // </tr>
       );
     });
   };
@@ -554,7 +562,14 @@ class App extends Component {
     return price;
   };
 
-  renderPortfolio = () => {
+  renderPortfolio = (
+    gridStyle = {
+      gridColumnStart: 3,
+      gridColumnEnd: 5,
+      gridRowStart: 1,
+      gridRowEnd: 2,
+    }
+  ) => {
     const user = {
       totalDeposited: this.state.listedAssets.reduce(
         (accumulator, { price, balanceOf }) => accumulator + price * balanceOf,
@@ -565,7 +580,7 @@ class App extends Component {
         amount: asset.balanceOf,
       })),
     };
-    return <Portfolio user={user} />;
+    return <Portfolio gridStyle={gridStyle} user={user} />;
   };
 
   renderOrderEntryV1 = () => {
@@ -749,22 +764,45 @@ class App extends Component {
     return (
       <DashboardCard
         title="Order history"
-        gridStyle={{ gridRowStart: 2, gridColumnStart: 2, gridColumnEnd: 4 }}
+        gridStyle={{ gridRowStart: 2, gridColumnStart: 2, gridColumnEnd: 5 }}
       >
-        <table>
-          <tbody>
-            <tr>
-              <th>Symbol</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Time</th>
-              <th>Side</th>
-              <th>Qty</th>
-              <th>Price</th>
-            </tr>
-          </tbody>
-          <tbody>{this.renderOrders(orders)}</tbody>
-        </table>
+        <Table>
+          <TableHeader
+            headers={[
+              "Symbol",
+              "Name",
+              "Status",
+              "Time",
+              "Side",
+              "Qty",
+              "Price",
+              "Action",
+            ]}
+          />
+          {orders.map((order, key) => (
+            <TableRow
+              key={key}
+              valuesForEachColumn={[
+                order.symbol,
+                order.name,
+                order.status,
+                order.time,
+                order.side,
+                order.qty,
+                order.price,
+                <button
+                  style={buttonStyleTable(
+                    order.status === "OPEN" ? "error" : "inactive"
+                  )}
+                  value={order.hash}
+                  onClick={this.handleCancelClick}
+                >
+                  Cancel
+                </button>,
+              ]}
+            />
+          ))}
+        </Table>
       </DashboardCard>
     );
   };
@@ -1325,6 +1363,21 @@ const buttonStyle = (color) => ({
   lineHeight: "19px",
   textAlign: "center",
   margin: "1em",
+  cursor: "pointer",
+});
+
+const buttonStyleTable = (color) => ({
+  color: "#ffffff",
+  backgroundColor: color === "error" ? "#C34A3E" : "#727379",
+  borderRadius: "6px",
+  border: "none",
+  padding: "0.5em 2em",
+  fontSize: "12px",
+  fontWeight: 900,
+  letterSpacing: "0.48px",
+  lineHeight: "14px",
+  textAlign: "center",
+  margin: "0em",
   cursor: "pointer",
 });
 

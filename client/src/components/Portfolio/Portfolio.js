@@ -3,17 +3,17 @@ import styles from "./Portfolio.module.css";
 import DashboardCard from "../DashboardCard";
 import Table, { TableHeader, TableRow } from "../Table";
 
-const Portfolio = ({ user }) => {
+const Portfolio = ({
+  user,
+  gridStyle = {
+    gridColumnStart: 3,
+    gridColumnEnd: 5,
+    gridRowStart: 1,
+    gridRowEnd: 2,
+  },
+}) => {
   return (
-    <DashboardCard
-      title={"Portfolio"}
-      gridStyle={{
-        gridColumnStart: 3,
-        gridColumnEnd: 5,
-        gridRowStart: 1,
-        gridRowEnd: 2,
-      }}
-    >
+    <DashboardCard title={"Portfolio"} gridStyle={gridStyle}>
       <header className={styles.header}>
         <h2 className={styles.header__total}>${user.totalDeposited}</h2>
         <p className={styles.label}>Total owned</p>
