@@ -4804,12 +4804,12 @@
         }
       },
       "links": {},
-      "address": "0x77e003cF645Df70D33A6696Fb2900D588B4dB28e",
-      "transactionHash": "0x82977f8f97977a4645a88617a46b768e9c2879d848cfb77927ebb55591b2eeb9"
+      "address": "0x3963A13001946ba4849Fa438d8aEa877877669D7",
+      "transactionHash": "0x07babe3f514577b0e75967014e839cb68aef2f273c0532dfc58783a753a49dfb"
     }
   },
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-06-13T07:24:23.375Z",
+  "updatedAt": "2020-06-15T10:53:09.158Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {

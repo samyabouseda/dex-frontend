@@ -744,12 +744,12 @@
         }
       },
       "links": {},
-      "address": "0x17D6054Fe2c7331Bd0aAf81321c2506E638E99bb",
-      "transactionHash": "0x30baf433f5ca0cbdbdd5ae184d18b77042b35fa7627a1fac5e8e6a01d855c9ca"
+      "address": "0x26b5Fed55638C43861C42D8809B963f590F91216",
+      "transactionHash": "0x12b5b9b83d368a1822a5d708bf0bd68c9819e342b07742d80692a004f34efc68"
     }
   },
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-06-13T07:24:23.371Z",
+  "updatedAt": "2020-06-15T10:53:09.147Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {

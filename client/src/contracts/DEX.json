@@ -10807,12 +10807,12 @@
         }
       },
       "links": {},
-      "address": "0x5c103B9A1084ebE623C40e424718466c2171D500",
-      "transactionHash": "0xbe9735e2ed26e2706140b929b6a4fac223d07579653b70b819fa040fa1e37030"
+      "address": "0x57acC469C74699E6Cf58759306E0746B7A54B568",
+      "transactionHash": "0xd154639319280a3141b45866fcf7b654d5d4b45cdf086988e3f06e9256ab912e"
     }
   },
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-06-13T07:24:23.870Z",
+  "updatedAt": "2020-06-15T10:53:09.975Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}

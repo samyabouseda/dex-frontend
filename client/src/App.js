@@ -1135,6 +1135,7 @@ class App extends Component {
         console.log(error);
       }
     } else {
+      console.log(orderEntry);
       alert("You need to fill all the order entry inputs.");
     }
   };
